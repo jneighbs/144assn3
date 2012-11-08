@@ -1,4 +1,4 @@
 144assn3
 ========
 
-Fin with routers
+Fun with routers
