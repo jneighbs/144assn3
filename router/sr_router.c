@@ -22,6 +22,9 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+#define ARP 1
+#define IP 2
+
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -50,6 +53,48 @@ void sr_init(struct sr_instance* sr)
 
 } /* -- sr_init -- */
 
+/*------------------------------------------------------------------------
+* Method: determineEthernetFrameType
+* Look at the ethernet frame and return values ARP or IP to be used in 
+* a switch statement
+*------------------------------------------------------------------------*/
+int determineEthernetFrameType(uint8_t* packet)
+{
+printf("--Function: determineEthernetFrameType-- \n");
+packet = packet+2;
+if(packet == ethertype_arp){
+	printf("Received arp packet \n");
+ 	return ARP;
+ }
+if(packet == ethertype_ip){
+	printf("Received IP packet \n");
+	return IP;
+}
+return 0;
+}
+
+/*------------------------------------------------------------------------
+* Method: handleArp
+* Handles logic when receiving arp packets: 
+*	reply to me -> cache, send available packets in queue
+*	request to me -> construct reply, send it back
+*	not to me -> ignore
+*------------------------------------------------------------------------*/
+void handleArp(){
+printf("--function: handleArp-- \n");
+}
+
+/*------------------------------------------------------------------------
+* Method: handleIP
+* Handles logic when receiving ip packets: 
+*	to one of my interfaces -> if ICMP echo request,
+* reply; else ICMP port unreachable reply
+*	not to one of my interfaces -> sanity check, forward
+*------------------------------------------------------------------------*/
+void handleIP(){
+printf("--function: handleIP-- \n");
+}
+
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
  * Scope:  Global
@@ -75,10 +120,36 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(sr);
   assert(packet);
   assert(interface);
-
+  
+  printf("--Function: sr_handlepacket-- \n");
   printf("*** -> Received packet of length %d \n",len);
 
   /* fill in code here */
+  
+  switch(determineEthernetFrameType(packet))
+  {
+  case ARP: 
+  	handleArp();
+  	break;
+  case IP: 
+  	handleIP();
+  	break;
+  default: 
+  	printf("Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket");
+  }
 
 }/* end sr_ForwardPacket */
+
+
+
+
+
+
+
+
+
+
+
+
+
 
