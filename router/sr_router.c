@@ -97,12 +97,12 @@ printf("--function: handleArp-- \n");
 struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 
 	printf("--function: findInterfaceThatMatchesIpDest-- \n");
-	printf("ipheader: %u\n",ipheader->ip_dst);
+	printf("ipheader->ip_dst: %u\n",ipheader->ip_dst);
 	struct sr_if* interface = sr->if_list;
 	printf("interface->ip: %u\n", interface->ip);
 	while(interface!=NULL){
 		printf("reached this point");
-		if(interface->ip == ((sr_ip_hdr_t*)packet)->ip_dst){
+		if(interface->ip == ipheader->ip_dst{
 			printf("We found a match!\n");
 			return interface;
 		}
@@ -118,9 +118,9 @@ return NULL;
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(struct sr_instance* sr, uint8_t* packet){
+void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: handleIP-- \n");
-	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, packet);
+	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 }
 
 /*---------------------------------------------------------------------
@@ -162,7 +162,7 @@ void sr_handlepacket(struct sr_instance* sr,
   	handleArp();
   	break;
   case IP: 
-  	handleIP(sr, packet);
+  	handleIP(sr, ipheader);
   	break;
   default: 
   	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
