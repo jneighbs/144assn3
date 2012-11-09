@@ -95,8 +95,9 @@ printf("--function: handleArp-- \n");
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(){
+void handleIP(struct sr_instance* sr){
 printf("--function: handleIP-- \n");
+sr_print_if_list(sr);
 //is it destined to me, or is it not destined to me?
 }
 
@@ -134,7 +135,7 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(packet))
   {
   case ARP: 
-  	handleArp();
+  	handleArp(sr);
   	break;
   case IP: 
   	handleIP();
