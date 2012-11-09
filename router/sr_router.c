@@ -102,10 +102,9 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 	printf("ntohl(ipheader->ip_dst): %u\n",ntohl(ipheader->ip_dst));
 	printf("ntohl(ipheader->ip_p): %u\n",ntohl(ipheader->ip_p));
 	struct sr_if* interface = sr->if_list;
-	printf("interface->ip: %u\n", interface->ip);
-	printf("ntohl(interface->ip: %u\n)", ntohl(interface->ip));
 	while(interface!=NULL){
-		printf("reached this point");
+		printf("interface->ip: %u\n", interface->ip);
+		printf("ntohl(interface->ip: %u\n)", ntohl(interface->ip));
 		if(interface->ip == ipheader->ip_dst){
 			printf("We found a match!\n");
 			return interface;
