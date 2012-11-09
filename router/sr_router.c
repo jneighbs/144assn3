@@ -60,15 +60,15 @@ void sr_init(struct sr_instance* sr)
 *------------------------------------------------------------------------*/
 int determineEthernetFrameType(uint8_t* packet)
 {
-printf("--Function: determineEthernetFrameType-- \n");
+	printf("--Function: determineEthernetFrameType-- \n");
 
-printf("ethertype_arp: %u\n", ethertype_arp);
-printf("ethertype_ip: %u\n", ethertype_ip);
-printf("((sr_ethernet_hdr_t*)packet)->ether_type: %u\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
+	printf("ethertype_arp: %u\n", ethertype_arp);
+	printf("ethertype_ip: %u\n", ethertype_ip);
+	printf("((sr_ethernet_hdr_t*)packet)->ether_type: %u\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
 
-if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
-	printf("Received arp packet \n");
- 	return ARP;
+	if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
+		printf("Received arp packet \n");
+ 		return ARP;
  }
 if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_ip){
 	printf("Received IP packet \n");
@@ -92,14 +92,18 @@ printf("--function: handleArp-- \n");
 struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, uint8_t* packet){
 	printf("--function: findInterfaceThatMatchesIpDest-- \n");
 	packet = packet + 4;
+	printf("((sr_ip_hdr_t*)packet)->ip_dst): %u\n",((sr_ip_hdr_t*)packet)->ip_dst);
 	struct sr_if* interface = sr->if_list;
-	while(interface!=null){
+	printf("interface->ip: %u\n", interface->ip);
+	while(interface!=NULL){
+		printf("reached this point");
 		if(interface->ip == ((sr_ip_hdr_t*)packet)->ip_dst){
+			printf("We found a match!\n");
 			return interface;
 		}
 		interface=interface->next;
 	}
-return null;
+return NULL;
 }
 
 /*------------------------------------------------------------------------
@@ -111,7 +115,7 @@ return null;
 *------------------------------------------------------------------------*/
 void handleIP(struct sr_instance* sr, uint8_t* packet){
 	printf("--function: handleIP-- \n");
-	struct sr_if* = findInterfaceThatMatchesIpDest(sr, packet);
+	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, packet);
 }
 
 /*---------------------------------------------------------------------
@@ -151,7 +155,7 @@ void sr_handlepacket(struct sr_instance* sr,
   	handleArp();
   	break;
   case IP: 
-  	handleIP(sr);
+  	handleIP(sr, packet);
   	break;
   default: 
   	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
