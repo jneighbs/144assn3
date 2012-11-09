@@ -133,7 +133,7 @@ void sendICMP(){
 void ipToMe(){
 	printf("--function: ipToMe-- \n");
 	sendICMP();
-	//fill this in
+	/*fill this in*/
 }
 
 /*------------------------------------------------------------------------
@@ -143,8 +143,8 @@ void ipToMe(){
 
 void forwardIP(){
 	printf("--function: forwardIP-- \n");
-	//sanity check, decrement ttl, etc
-	//fill this in
+	/*sanity check, decrement ttl, etc*/
+	/*fill this in*/
 }
 
 /*------------------------------------------------------------------------
