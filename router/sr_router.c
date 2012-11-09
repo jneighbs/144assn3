@@ -26,7 +26,7 @@
 #define ARP 1
 #define IP 2
 /*ip protocols*/
-#defin TCP_PROTOCOL 6
+#define TCP_PROTOCOL 6
 #define UDP_PROTOCOL 17
 /*icmp description*/
 #define ECHO_REPLY 1
@@ -143,7 +143,7 @@ void sendICMP(uint8_t description){
 		type=3;
 		code=3;
 		break;
-	default
+	default:
 		printf("!!Sending unknown ICMP - auth Jacob in sendICMP!!");
 	}
 	/*fill this in*/
@@ -185,7 +185,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+ipheader->ip_hl)/*OH QUESTION*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+ipheader->ip_hl);/*OH QUESTION*/
 		if(receiveValidEchoRequest(icmpheader)){
 			sendICMP(ECHO_REPLY);
 		}
