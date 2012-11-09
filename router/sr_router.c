@@ -64,7 +64,7 @@ printf("--Function: determineEthernetFrameType-- \n");
 
 printf("ethertype_arp: %us\n", ethertype_arp);
 printf("ethertype_ip: %us\n", ethertype_ip);
-printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type);
+printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
 
 if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
 	printf("Received arp packet \n");
