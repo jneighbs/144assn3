@@ -121,7 +121,7 @@ return NULL;
 
 void sendICMP(){
 	printf("--function: sendICMP-- \n");
-	//fill this in
+	/*fill this in*/
 }
 
 /*------------------------------------------------------------------------
