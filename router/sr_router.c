@@ -88,11 +88,16 @@ void handleArp(){
 printf("--function: handleArp-- \n");
 }
 
+/*------------------------------------------------------------------------
+* Method: findInterfaceThatMatchesIpDest
+* find the router interface that matches the packets ip, if it exists. 
+* If it does, return the interface, else return NULL
+*------------------------------------------------------------------------*/
 
-struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, uint8_t* packet){
+struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
+
 	printf("--function: findInterfaceThatMatchesIpDest-- \n");
-	packet = packet + 4;
-	printf("((sr_ip_hdr_t*)packet)->ip_dst): %u\n",((sr_ip_hdr_t*)packet)->ip_dst);
+	printf("ipheader: %u\n",ipheader->ip_dst);
 	struct sr_if* interface = sr->if_list;
 	printf("interface->ip: %u\n", interface->ip);
 	while(interface!=NULL){
@@ -146,10 +151,12 @@ void sr_handlepacket(struct sr_instance* sr,
   
   printf("--Function: sr_handlepacket-- \n");
   printf("*** -> Received packet of length %d \n",len);
-
+  
+  sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
+  sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t));
   sr_print_if_list(sr);
   
-  switch(determineEthernetFrameType(packet))
+  switch(determineEthernetFrameType(ipheader))
   {
   case ARP: 
   	handleArp();
