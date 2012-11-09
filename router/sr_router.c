@@ -58,21 +58,21 @@ void sr_init(struct sr_instance* sr)
 * Look at the ethernet frame and return values ARP or IP to be used in 
 * a switch statement
 *------------------------------------------------------------------------*/
-int determineEthernetFrameType(uint8_t* packet)
+int determineEthernetFrameType(sr_ethernet_hdr_t* ethrheader)
 {
 	printf("--Function: determineEthernetFrameType-- \n");
 
 	printf("ethertype_arp: %u\n", ethertype_arp);
 	printf("ethertype_ip: %u\n", ethertype_ip);
-	printf("((sr_ethernet_hdr_t*)packet)->ether_type: %u\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
+	printf("ntohs(ethrheader->ether_type)", ntohs(ethrheader->ether_type);
 
-	if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
+	if(ntohs(ethrheader->ether_type) == ethertype_arp){
 		printf("Received arp packet \n");
  		return ARP;
  }
-if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_ip){
-	printf("Received IP packet \n");
-	return IP;
+	if(ntohs(ethrheader->ether_type) == ethertype_ip){
+		printf("Received IP packet \n");
+		return IP;
 }
 return 0;
 }
@@ -85,7 +85,7 @@ return 0;
 *	not to me -> ignore
 *------------------------------------------------------------------------*/
 void handleArp(){
-printf("--function: handleArp-- \n");
+	printf("--function: handleArp-- \n");
 }
 
 /*------------------------------------------------------------------------
@@ -97,12 +97,16 @@ printf("--function: handleArp-- \n");
 struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 
 	printf("--function: findInterfaceThatMatchesIpDest-- \n");
+	printf("ipheader->ip_p: %u\n", ipheader->ip_p);
 	printf("ipheader->ip_dst: %u\n",ipheader->ip_dst);
+	printf("ntohl(ipheader->ip_dst): %u\n",ntohl(ipheader->ip_dst));
+	printf("ntohl(ipheader->ip_p): %u\n",ntohl(ipheader->ip_p));
 	struct sr_if* interface = sr->if_list;
 	printf("interface->ip: %u\n", interface->ip);
+	printf("ntoh(interface->ip: %u\n)", ntoh(interface->ip));
 	while(interface!=NULL){
 		printf("reached this point");
-		if(interface->ip == ipheader->ip_dst{
+		if(interface->ip == ipheader->ip_dst){
 			printf("We found a match!\n");
 			return interface;
 		}
@@ -156,7 +160,9 @@ void sr_handlepacket(struct sr_instance* sr,
   sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t));
   sr_print_if_list(sr);
   
-  switch(determineEthernetFrameType(ipheader))
+  
+  
+  switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
   	handleArp();
