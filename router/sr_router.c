@@ -22,8 +22,15 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+/*ethernet type*/
 #define ARP 1
 #define IP 2
+/*ip protocols*/
+#defin TCP_PROTOCOL 6
+#define UDP_PROTOCOL 17
+/*icmp description*/
+#define ECHO_REPLY 1
+#define DESTINATION_PORT_UNREACHABLE 2
 
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
@@ -116,24 +123,76 @@ return NULL;
 
 /*------------------------------------------------------------------------
 * Method: sendICMP
-* Given a code and type *(and probably destination?), this function sends a ICMP packet.
+* Given an ICMP description *(and probably destination?), this function sends a ICMP packet.
 *-------------------------------------------------------------------------*/
 
-void sendICMP(){
+void sendICMP(uint8_t description){
 	printf("--function: sendICMP-- \n");
+	uint8_t type;
+	uint8_t code;
+	
+	switch(description)
+	{
+	case ECHO_REPLY:
+		printf("creating ECHO_REPLY\n");
+		type=0;
+		code=0;
+		break;
+	case DESTINATION_PORT_UNREACHABLE:
+		printf("creating DESTINATION_PORT_UNREACHABLE\n");
+		type=3;
+		code=3;
+		break;
+	default
+		printf("!!Sending unknown ICMP - auth Jacob in sendICMP!!");
+	}
 	/*fill this in*/
+}
+
+
+/*------------------------------------------------------------------------
+* Method: receiveTCPorUDP
+* -Returns whether or not the ip header is describing tcp or udp packet
+*-------------------------------------------------------------------------*/
+
+int receiveTCPorUDP(sr_ip_hdr_t* ipheader){
+	printf("--function: receiveTCPorUDP-- \n");
+	return (ipheader->ip_p==TCP_PROTOCOL || ipheader->ip_p==UDP_PROTOCOL);
+}
+
+/*------------------------------------------------------------------------
+* Method: receiveEchoRequest
+* -Returns whether or not the icmp header is describing an echo request
+*-------------------------------------------------------------------------*/
+
+int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
+	printf("--function: receiveValidEchoRequest-- \n");
+	uint16_t givenChecksum = icmpheader->icmp_sum;
+	icmpheader->icmp_sum = 0;
+	/*uint16_t calculatedChecksum = sha1(icmpheader); OH QUESTION*/
+	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0);
 }
 
 /*------------------------------------------------------------------------
 * Method: ipToMe
-* If ICMP echo request, send a reply
-* Else, send port unreachable *(IS THIS CORRECT BEHAVIOR? - only tcp/udp but ignore rest)?
+* -If the packet is an ICMP echo request and its checksum is valid, send an
+* ICMP echo reply to the sending host.
+* -If the packet contains a TCP or UDP payload, send an ICMP port unreachable
+* to the sending host.
+* -Otherwise, ignore the packet.
 *-------------------------------------------------------------------------*/
 
-void ipToMe(){
+void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
-	sendICMP();
-	/*fill this in*/
+	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+ipheader->ip_hl)/*OH QUESTION*/
+		if(receiveValidEchoRequest(icmpheader)){
+			sendICMP(ECHO_REPLY);
+		}
+	} else if(receiveTCPorUDP(ipheader)){
+		sendICMP(DESTINATION_PORT_UNREACHABLE);
+	}
+	/*If the packet isn't caught in one of the above conditions, ignore*/
 }
 
 /*------------------------------------------------------------------------
@@ -158,7 +217,7 @@ void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: handleIP-- \n");
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
-		ipToMe();
+		ipToMe(ipheader);
 	}else{
 		forwardIP();
 	}
