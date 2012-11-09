@@ -67,11 +67,11 @@ printf("ethertype_ip: %us\n", ethertype_ip);
 printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ((sr_ethernet_hdr_t*)packet)->ether_type);
 
 packet = packet+2;
-if(((sr_ethernet_hdr_t*)packet)->ether_type == ethertype_arp){
+if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
 	printf("Received arp packet \n");
  	return ARP;
  }
-if(((sr_ethernet_hdr_t*)packet)->ether_type == ethertype_ip){
+if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_ip){
 	printf("Received IP packet \n");
 	return IP;
 }
