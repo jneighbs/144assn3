@@ -62,11 +62,11 @@ int determineEthernetFrameType(uint8_t* packet)
 {
 printf("--Function: determineEthernetFrameType-- \n");
 packet = packet+2;
-if(packet == ethertype_arp){
+if(*packet == ethertype_arp){
 	printf("Received arp packet \n");
  	return ARP;
  }
-if(packet == ethertype_ip){
+if(*packet == ethertype_ip){
 	printf("Received IP packet \n");
 	return IP;
 }
