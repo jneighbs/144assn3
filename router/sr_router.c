@@ -104,7 +104,7 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 	struct sr_if* interface = sr->if_list;
 	while(interface!=NULL){
 		printf("interface->ip: %u\n", interface->ip);
-		printf("ntohs(interface->ip): %u\n", ntohs(interface->ip));
+		printf("ntohl(interface->ip): %u\n", ntohl(interface->ip));
 		if(interface->ip == ipheader->ip_dst){
 			printf("We found a match!\n");
 			return interface;
@@ -112,6 +112,28 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 		interface=interface->next;
 	}
 return NULL;
+}
+
+/*------------------------------------------------------------------------
+* Method: sendICMP
+* Given a code and type *(and probably destination?), this function sends a ICMP packet.
+*-------------------------------------------------------------------------*/
+
+void sendICMP(){
+	printf("--function: sendICMP-- \n");
+	//fill this in
+}
+
+/*------------------------------------------------------------------------
+* Method: ipToMe
+* If ICMP echo request, send a reply
+* Else, send port unreachable *(IS THIS CORRECT BEHAVIOR? - only tcp/udp but ignore rest)?
+*-------------------------------------------------------------------------*/
+
+void ipToMe(){
+	printf("--function: ipToMe-- \n");
+	sendICMP();
+	//fill this in
 }
 
 /*------------------------------------------------------------------------
@@ -124,6 +146,11 @@ return NULL;
 void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: handleIP-- \n");
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
+	if(interface!=NULL){
+		ipToMe();
+	}else{
+		forwardIP();
+	}
 }
 
 /*---------------------------------------------------------------------
