@@ -64,7 +64,7 @@ int determineEthernetFrameType(sr_ethernet_hdr_t* ethrheader)
 
 	printf("ethertype_arp: %u\n", ethertype_arp);
 	printf("ethertype_ip: %u\n", ethertype_ip);
-	printf("ntohs(ethrheader->ether_type): %u\n", ntohs(ethertype_ip));
+	printf("ntohs(ethrheader->ether_type): %u\n", ntohs(ethrheader->ethertype));
 
 	if(ntohs(ethrheader->ether_type) == ethertype_arp){
 		printf("Received arp packet \n");
@@ -100,11 +100,11 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 	printf("ipheader->ip_p: %u\n", ipheader->ip_p);
 	printf("ipheader->ip_dst: %u\n",ipheader->ip_dst);
 	printf("ntohl(ipheader->ip_dst): %u\n",ntohl(ipheader->ip_dst));
-	printf("ntohl(ipheader->ip_p): %u\n",ntohl(ipheader->ip_p));
+	printf("ntohs(ipheader->ip_p): %u\n",ntohs(ipheader->ip_p));
 	struct sr_if* interface = sr->if_list;
 	while(interface!=NULL){
 		printf("interface->ip: %u\n", interface->ip);
-		printf("ntohl(interface->ip: %u\n)", ntohl(interface->ip));
+		printf("ntohs(interface->ip): %u\n", ntohs(interface->ip));
 		if(interface->ip == ipheader->ip_dst){
 			printf("We found a match!\n");
 			return interface;
