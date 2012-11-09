@@ -187,7 +187,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+sizeof(sr_ip_hdr_t));/*OH QUESTION*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+20);/*OH QUESTION*/
 		if(receiveValidEchoRequest(icmpheader)){
 			sendICMP(ECHO_REPLY);
 		}
