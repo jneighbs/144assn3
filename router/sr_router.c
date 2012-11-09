@@ -62,9 +62,9 @@ int determineEthernetFrameType(uint8_t* packet)
 {
 printf("--Function: determineEthernetFrameType-- \n");
 
-printf("ethertype_arp: %us\n", ethertype_arp);
-printf("ethertype_ip: %us\n", ethertype_ip);
-printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
+printf("ethertype_arp: %u\n", ethertype_arp);
+printf("ethertype_ip: %u\n", ethertype_ip);
+printf("((sr_ethernet_hdr_t*)packet)->ether_type: %u\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type));
 
 if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
 	printf("Received arp packet \n");
@@ -88,6 +88,20 @@ void handleArp(){
 printf("--function: handleArp-- \n");
 }
 
+
+struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, uint8_t* packet){
+	printf("--function: findInterfaceThatMatchesIpDest-- \n");
+	packet = packet + 4;
+	struct sr_if* interface = sr->if_list;
+	while(interface!=null){
+		if(interface->ip == ((sr_ip_hdr_t*)packet)->ip_dst){
+			return interface;
+		}
+		interface=interface->next;
+	}
+return null;
+}
+
 /*------------------------------------------------------------------------
 * Method: handleIP
 * Handles logic when receiving ip packets: 
@@ -95,10 +109,9 @@ printf("--function: handleArp-- \n");
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(struct sr_instance* sr){
-printf("--function: handleIP-- \n");
-sr_print_if_list(sr);
-//is it destined to me, or is it not destined to me?
+void handleIP(struct sr_instance* sr, uint8_t* packet){
+	printf("--function: handleIP-- \n");
+	struct sr_if* = findInterfaceThatMatchesIpDest(sr, packet);
 }
 
 /*---------------------------------------------------------------------
@@ -130,15 +143,15 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("--Function: sr_handlepacket-- \n");
   printf("*** -> Received packet of length %d \n",len);
 
-  /* fill in code here */
+  sr_print_if_list(sr);
   
   switch(determineEthernetFrameType(packet))
   {
   case ARP: 
-  	handleArp(sr);
+  	handleArp();
   	break;
   case IP: 
-  	handleIP();
+  	handleIP(sr);
   	break;
   default: 
   	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
