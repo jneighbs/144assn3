@@ -66,7 +66,6 @@ printf("ethertype_arp: %us\n", ethertype_arp);
 printf("ethertype_ip: %us\n", ethertype_ip);
 printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ntohs(((sr_ethernet_hdr_t*)packet)->ether_type);
 
-packet = packet+2;
 if(ntohs(((sr_ethernet_hdr_t*)packet)->ether_type) == ethertype_arp){
 	printf("Received arp packet \n");
  	return ARP;
@@ -98,6 +97,7 @@ printf("--function: handleArp-- \n");
 *------------------------------------------------------------------------*/
 void handleIP(){
 printf("--function: handleIP-- \n");
+//is it destined to me, or is it not destined to me?
 }
 
 /*---------------------------------------------------------------------
