@@ -137,6 +137,17 @@ void ipToMe(){
 }
 
 /*------------------------------------------------------------------------
+* Method: forwardIP
+* 
+*-------------------------------------------------------------------------*/
+
+void forwardIP(){
+	printf("--function: forwardIP-- \n");
+	//sanity check, decrement ttl, etc
+	//fill this in
+}
+
+/*------------------------------------------------------------------------
 * Method: handleIP
 * Handles logic when receiving ip packets: 
 *	to one of my interfaces -> if ICMP echo request,
@@ -185,8 +196,6 @@ void sr_handlepacket(struct sr_instance* sr,
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
   sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t));
   sr_print_if_list(sr);
-  
-  
   
   switch(determineEthernetFrameType(ethrheader))
   {
