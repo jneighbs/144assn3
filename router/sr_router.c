@@ -61,12 +61,17 @@ void sr_init(struct sr_instance* sr)
 int determineEthernetFrameType(uint8_t* packet)
 {
 printf("--Function: determineEthernetFrameType-- \n");
+
+printf("ethertype_arp: %us\n", ethertype_arp);
+printf("ethertype_ip: %us\n", ethertype_ip);
+printf("((sr_ethernet_hdr_t*)packet)->ether_type: %us\n", ((sr_ethernet_hdr_t*)packet)->ether_type;
+
 packet = packet+2;
-if(*packet == ethertype_arp){
+if(((sr_ethernet_hdr_t*)packet)->ether_type == ethertype_arp){
 	printf("Received arp packet \n");
  	return ARP;
  }
-if(*packet == ethertype_ip){
+if(((sr_ethernet_hdr_t*)packet)->ether_type == ethertype_ip){
 	printf("Received IP packet \n");
 	return IP;
 }
@@ -135,7 +140,7 @@ void sr_handlepacket(struct sr_instance* sr,
   	handleIP();
   	break;
   default: 
-  	printf("Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket");
+  	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
   }
 
 }/* end sr_ForwardPacket */
