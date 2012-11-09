@@ -167,8 +167,8 @@ int receiveTCPorUDP(sr_ip_hdr_t* ipheader){
 
 int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 	printf("--function: receiveValidEchoRequest-- \n");
-	printf("icmpheader->icmp_type: %u\n");
-	printf("icmpheader->icmp_code: %u\n");
+	printf("icmpheader->icmp_type: %u\n", icmpheader->icmp_type);
+	printf("icmpheader->icmp_code: %u\n", icmpheader->icmp_code);
 	/*uint16_t givenChecksum = icmpheader->icmp_sum;
 	icmpheader->icmp_sum = 0;
 	uint16_t calculatedChecksum = sha1(icmpheader); OH QUESTION*/
