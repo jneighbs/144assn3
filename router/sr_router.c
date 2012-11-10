@@ -12,6 +12,7 @@
  **********************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 
@@ -129,19 +130,77 @@ return NULL;
 }
 
 /*------------------------------------------------------------------------
+* Method: sendTimeExceededCICMP
+* Sends a time exceeded icmp
+*-------------------------------------------------------------------------*/
+void sendTimeExceededCICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+	printf("--function: sendTimeExceededCICMP-- \n");
+	/*
+
+	*/
+	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
+}
+
+/*------------------------------------------------------------------------
+* Method: sendType3ICMP
+* Sends a type 3 ICMP
+*-------------------------------------------------------------------------*/
+void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+	printf("--function: sendType3ICMP-- \n");
+	/*
+
+	*/
+	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
+}
+
+/*------------------------------------------------------------------------
 * Method: sendEchoReply
 * Sends an echo reply
 *-------------------------------------------------------------------------*/
-void sendEchoReply(){
-
+void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+	printf("--function: sendEchoReply-- \n");
+	/*
+	
+	make sure to convert to network order when you place in packet
+	malloc new ether of correct len
+	mem copy everything in verbatim
+	swithc around fields
+	recompute checksum
+	send
+	
+	malloc new ip header
+	memcopy old header directly onto new header
+	swap source and destination ips (carefull about endianness - could be tricky around here)
+	--icmp header and data--
+	malloc new icmp header - memset to 0
+	after checksum field, straight up copy everything into newly malloced icmp packet
+	compute checksum over headr starting at type, store in checksum
+	--icmp--
+	*/
+	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
 }
 
 /*------------------------------------------------------------------------
 * Method: sendICMP
 * Given an ICMP description *(and probably destination?), this function sends a ICMP packet.
+*** Echo reply (type 0)
+* Sent in response to an echo request (ping) to one of the router's interfaces.
+* (This is only for echo requests to any of the router's IPs. An echo request sent 
+* elsewhere should be forwarded to the next hop address as usual.)
+*** Destination unreachable (type 3, code 0)
+* Sent if there is a non-existent route to the destination IP (no matching entry in routing
+* table when forwarding an IP packet).
+*** Destination host unreachable (type 3, code 1)
+* Sent if five ARP requests were sent to the next-hop IP without a response.
+*** Port unreachable (type 3, code 3)
+* Sent if an IP packet containing a UDP or TCP payload is sent to one of the router's
+* interfaces. This is needed for traceroute to work.
+*** Time exceeded (type 11, code 0)
+* Sent if an IP packet is discarded during processing because the TTL field is 0. This is
+* also needed for traceroute to work.
 *-------------------------------------------------------------------------*/
 
-void sendICMP(uint8_t description){
+void sendICMP(uint8_t description, sr_ip_hdr_t* ipheader, struct sr_instance* sr){
 	printf("--function: sendICMP-- \n");
 	uint8_t type;
 	uint8_t code;
@@ -152,12 +211,13 @@ void sendICMP(uint8_t description){
 		printf("creating ECHO_REPLY\n");
 		type=0;
 		code=0;
-		sendEchoReply();
+		sendEchoReply(sr, ipheader, type, code);
 		break;
 	case DESTINATION_UNREACHABLE:
 		printf("creating DESTINATION_UNREACHABLE\n");
 		type=3;
 		code=0;
+		sendType3ICMP(sr, ipheader, type, code);
 		break;
 	case DESTINATION_HOST_UNREACHABLE:
 		printf("creating DESTINATION_HOST_UNREACHABLE\n");
@@ -173,6 +233,7 @@ void sendICMP(uint8_t description){
 		printf("creating TIME_EXCEEDED\n");
 		type=11;
 		code=0;
+		sendTimeExceededICMP(sr, ipheader, type, code);
 		break;
 	default:
 		printf("!!Sending unknown ICMP - auth Jacob in sendICMP!!");
@@ -223,7 +284,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 * -Otherwise, ignore the packet.
 *-------------------------------------------------------------------------*/
 
-void ipToMe(sr_ip_hdr_t* ipheader, unsigned int len){
+void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 	printf("--function: ipToMe-- \n");
 	len = len - (sizeof(*ipheader));
 	printf("len: %i\n", len);
@@ -235,7 +296,7 @@ void ipToMe(sr_ip_hdr_t* ipheader, unsigned int len){
  		printf("--------------------------\n");
  		
 		if(receiveValidEchoRequest(icmpheader, len)){
-			sendICMP(ECHO_REPLY);
+			sendICMP(ECHO_REPLY, ipheader, sr);
 		}
 		
 	} else if(receiveTCPorUDP(ipheader)){
@@ -274,7 +335,7 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
  	
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
-		ipToMe(ipheader, len);
+		ipToMe(sr, ipheader, len);
 	}else{
 		forwardIP();
 	}
