@@ -315,10 +315,13 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName){
 	printf("--function: generateArpRequest-- \n");
 	
 	struct sr_if* interface = sr_get_interface(sr, interfaceName);
-	sr_ethernet_hdr_t* ethrheader = malloc(sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	
+	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
 	
 	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
-	ethrheader->ether_shost= interface->addr;
+	
+	memcpy(ether_shost,interface->addr,ETHER_ADDR_LEN);
 	ethrheader->ether_type = htons(ethertype_arp);
 	
 	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
