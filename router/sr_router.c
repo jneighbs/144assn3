@@ -336,7 +336,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
  	arpheader->ar_pln=IP_ADDR_LEN;
  	arpheader->ar_op=htons(1);
  	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
- 	memcpy(arpheader->ar_sip,interface->ip,IP_ADDR_LEN);
+ 	arpheader->ar_sip = interface->ip;
  	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
  	
  	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
