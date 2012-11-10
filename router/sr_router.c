@@ -30,8 +30,10 @@
 #define UDP_PROTOCOL 17
 /*icmp description*/
 #define ECHO_REPLY 1
-#define DESTINATION_PORT_UNREACHABLE 2
-
+#define DESTINATION_UNREACHABLE 2
+#define DESTINATION_HOST_UNREACHABLE 3
+#define DESTINATION_PORT_UNREACHABLE 4
+#define TIME_ECXCEEDED 5
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -138,15 +140,32 @@ void sendICMP(uint8_t description){
 		type=0;
 		code=0;
 		break;
+	case DESTINATION_UNREACHABLE:
+		printf("creating DESTINATION_UNREACHABLE\n");
+		type=3;
+		code=0;
+		break;
+	case DESTINATION_HOST_UNREACHABLE:
+		printf("creating DESTINATION_HOST_UNREACHABLE\n");
+		type=3;
+		code=1;
+		break;
 	case DESTINATION_PORT_UNREACHABLE:
 		printf("creating DESTINATION_PORT_UNREACHABLE\n");
 		type=3;
 		code=3;
 		break;
+	case TIME_ECXCEEDED:
+		printf("creating TIME_ECXCEEDED\n");
+		type=11;
+		code=0;
+		break;
 	default:
 		printf("!!Sending unknown ICMP - auth Jacob in sendICMP!!");
+		type=255;
+		code=255;
 	}
-	/*fill this in*/
+
 }
 
 
@@ -187,7 +206,10 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+20);/*OH QUESTION*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+sizeof(sr_ip_hdr_t));/*OH QUESTION*/
+		printf("---MY ETHR HEADER INFO---\n");
+  		print_hdr_icmp((uint8_t*)icmpheader);
+ 		printf("--------------------------\n");
 		if(receiveValidEchoRequest(icmpheader)){
 			sendICMP(ECHO_REPLY);
 		}
@@ -217,6 +239,9 @@ void forwardIP(){
 *------------------------------------------------------------------------*/
 void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: handleIP-- \n");
+	printf("---MY ETHR HEADER INFO---\n");
+  	print_hdr_ip((uint8_t*)ipheader);
+ 	printf("--------------------------\n");
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
 		ipToMe(ipheader);
@@ -257,6 +282,13 @@ void sr_handlepacket(struct sr_instance* sr,
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
   sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t));
   sr_print_if_list(sr);
+  printf("---OFFICIAL PACKET HEADER INFO---\n");
+  print_hdrs(packet, len);
+  printf("---------------------------------\n");
+  
+  printf("---MY ETHR HEADER INFO---\n");
+  print_hdr_eth((uint8_t *)ethrheader);
+  printf("--------------------------\n");
   
   switch(determineEthernetFrameType(ethrheader))
   {
