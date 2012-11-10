@@ -328,7 +328,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
   	print_hdr_eth((uint8_t *)ethrheader);
  	printf("--------------------------------------------\n");
  	
- 	sr_arp_hdr_t arpheader = (sr_arp_hdr_t*)(ethrheader+1);
+ 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
  	
  	arpheader->ar_hrd=htons(1);
  	arpheader->ar_pro=htons(ethertype_ip);
