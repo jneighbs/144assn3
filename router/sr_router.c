@@ -33,7 +33,7 @@
 #define DESTINATION_UNREACHABLE 2
 #define DESTINATION_HOST_UNREACHABLE 3
 #define DESTINATION_PORT_UNREACHABLE 4
-#define TIME_ECXCEEDED 5
+#define TIME_EXCEEDED 5
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -93,8 +93,13 @@ return 0;
 *	request to me -> construct reply, send it back
 *	not to me -> ignore
 *------------------------------------------------------------------------*/
-void handleArp(){
+void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len){
 	printf("--function: handleArp-- \n");
+	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
+	
+	printf("---MY ARP HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)arpheader);
+  	printf("--------------------------\n");
 }
 
 /*------------------------------------------------------------------------
@@ -155,8 +160,8 @@ void sendICMP(uint8_t description){
 		type=3;
 		code=3;
 		break;
-	case TIME_ECXCEEDED:
-		printf("creating TIME_ECXCEEDED\n");
+	case TIME_EXCEEDED:
+		printf("creating TIME_EXCEEDED\n");
 		type=11;
 		code=0;
 		break;
@@ -205,14 +210,17 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
+	
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);/*OH QUESTION*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);
 		printf("---MY ICMP HEADER INFO---\n");
   		print_hdr_icmp((uint8_t*)icmpheader);
  		printf("--------------------------\n");
+ 		
 		if(receiveValidEchoRequest(icmpheader)){
 			sendICMP(ECHO_REPLY);
 		}
+		
 	} else if(receiveTCPorUDP(ipheader)){
 		sendICMP(DESTINATION_PORT_UNREACHABLE);
 	}
@@ -237,11 +245,14 @@ void forwardIP(){
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
+void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len){
+	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
+	
 	printf("--function: handleIP-- \n");
 	printf("---MY IP HEADER INFO---\n");
   	print_hdr_ip((uint8_t*)ipheader);
  	printf("--------------------------\n");
+ 	
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
 		ipToMe(ipheader);
@@ -280,8 +291,8 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
   
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
-  sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t));
-  sr_print_if_list(sr);
+  /*sr_print_if_list(sr);*/
+  
   printf("---OFFICIAL PACKET HEADER INFO---\n");
   print_hdrs(packet, len);
   printf("---------------------------------\n");
@@ -293,10 +304,10 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
-  	handleArp();
+  	handleArp(sr, ethrheader, len);
   	break;
   case IP: 
-  	handleIP(sr, ipheader);
+  	handleIP(sr, ethrheader, len);
   	break;
   default: 
   	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
