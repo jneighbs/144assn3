@@ -206,8 +206,8 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+sizeof(sr_ip_hdr_t));/*OH QUESTION*/
-		printf("---MY ETHR HEADER INFO---\n");
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+5);/*OH QUESTION*/
+		printf("---MY ICMP HEADER INFO---\n");
   		print_hdr_icmp((uint8_t*)icmpheader);
  		printf("--------------------------\n");
 		if(receiveValidEchoRequest(icmpheader)){
@@ -239,7 +239,7 @@ void forwardIP(){
 *------------------------------------------------------------------------*/
 void handleIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: handleIP-- \n");
-	printf("---MY ETHR HEADER INFO---\n");
+	printf("---MY IP HEADER INFO---\n");
   	print_hdr_ip((uint8_t*)ipheader);
  	printf("--------------------------\n");
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
