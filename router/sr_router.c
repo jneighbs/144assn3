@@ -130,11 +130,11 @@ return NULL;
 }
 
 /*------------------------------------------------------------------------
-* Method: sendTimeExceededCICMP
+* Method: sendTimeExceededICMP
 * Sends a time exceeded icmp
 *-------------------------------------------------------------------------*/
-void sendTimeExceededCICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
-	printf("--function: sendTimeExceededCICMP-- \n");
+void sendTimeExceededICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+	printf("--function: sendTimeExceededICMP-- \n");
 	/*
 
 	*/
