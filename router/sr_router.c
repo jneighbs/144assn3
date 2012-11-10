@@ -206,7 +206,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 void ipToMe(sr_ip_hdr_t* ipheader){
 	printf("--function: ipToMe-- \n");
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
-		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+5);/*OH QUESTION*/
+		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);/*OH QUESTION*/
 		printf("---MY ICMP HEADER INFO---\n");
   		print_hdr_icmp((uint8_t*)icmpheader);
  		printf("--------------------------\n");
