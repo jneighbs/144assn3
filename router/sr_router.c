@@ -24,6 +24,7 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+#define IP_ADDR_LEN 4
 /*ethernet type*/
 #define ARP 1
 #define IP 2
@@ -312,24 +313,35 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 * 
 *-------------------------------------------------------------------------*/
 
-void generateArpRequest(struct sr_instance* sr, char* interfaceName){
+void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP){
 	printf("--function: generateArpRequest-- \n");
 	
 	struct sr_if* interface = sr_get_interface(sr, interfaceName);
 	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	
 	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
 	
 	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
-	
 	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
 	ethrheader->ether_type = htons(ethertype_arp);
 	
 	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
   	print_hdr_eth((uint8_t *)ethrheader);
  	printf("--------------------------------------------\n");
-	
-	
+ 	
+ 	sr_arp_hdr_t arpheader = (sr_arp_hdr_t*)(ethrheader+1);
+ 	
+ 	arpheader->ar_hrd=htons(1);
+ 	arpheader->ar_pro=htons(ethertype_ip);
+ 	arpheader->ar_hln=ETHER_ADDR_LEN;
+ 	arpheader->ar_pln=IP_ADDR_LEN;
+ 	arpheader->ar_op=htons(1);
+ 	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
+ 	memcpy(arpheader->ar_sip,interface->ip,IP_ADDR_LEN);
+ 	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
+ 	
+ 	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)arpheader);
+ 	printf("--------------------------------------------\n");
 }
 
 /*------------------------------------------------------------------------
@@ -411,7 +423,7 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
-  	generateArpRequest(sr, interface);
+  	generateArpRequest(sr, interface, 0);
   	handleArp(sr, ethrheader, len, interface);
   	break;
   case IP: 
