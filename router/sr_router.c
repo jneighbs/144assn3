@@ -198,17 +198,20 @@ int receiveTCPorUDP(sr_ip_hdr_t* ipheader){
 * -Returns whether or not the icmp header is describing an echo request
 *-------------------------------------------------------------------------*/
 
-int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
+int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 	printf("--function: receiveValidEchoRequest-- \n");
 	printf("icmpheader->icmp_type: %u\n", icmpheader->icmp_type);
 	printf("icmpheader->icmp_code: %u\n", icmpheader->icmp_code);
-	/*uint16_t givenChecksum = icmpheader->icmp_sum;
 	
-	uint16_t cksum(icmpheader, int len);
-	
+	uint16_t givenChecksum = icmpheader->icmp_sum;
 	icmpheader->icmp_sum = 0;
-	uint16_t calculatedChecksum = sha1(icmpheader); OH QUESTION*/
-	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0);
+	uint16_t calculatedChecksum= cksum(icmpheader, len);
+	icmpheader->icmp_sum = givenChecksum;
+	
+	printf("givenChecksum: %d\n", givenChecksum);
+	printf("calculatedChecksum: %d\n", calculatedChecksum);
+	
+	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0 && givenChecksum == calculatedChecksum);
 }
 
 /*------------------------------------------------------------------------
@@ -220,8 +223,10 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 * -Otherwise, ignore the packet.
 *-------------------------------------------------------------------------*/
 
-void ipToMe(sr_ip_hdr_t* ipheader){
+void ipToMe(sr_ip_hdr_t* ipheader, unsigned int len){
 	printf("--function: ipToMe-- \n");
+	len = len - (sizeof(*ipheader));
+	printf("len: %i\n", len);
 	
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
 		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);
@@ -229,7 +234,7 @@ void ipToMe(sr_ip_hdr_t* ipheader){
   		print_hdr_icmp((uint8_t*)icmpheader);
  		printf("--------------------------\n");
  		
-		if(receiveValidEchoRequest(icmpheader)){
+		if(receiveValidEchoRequest(icmpheader, len)){
 			sendICMP(ECHO_REPLY);
 		}
 		
@@ -269,7 +274,7 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
  	
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
-		ipToMe(ipheader);
+		ipToMe(ipheader, len);
 	}else{
 		forwardIP();
 	}
