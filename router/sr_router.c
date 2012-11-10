@@ -12,6 +12,7 @@
  **********************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -321,7 +322,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName){
 	
 	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
 	
-	memcpy(ether_shost,interface->addr,ETHER_ADDR_LEN);
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
 	ethrheader->ether_type = htons(ethertype_arp);
 	
 	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
