@@ -94,7 +94,7 @@ return 0;
 *	request to me -> construct reply, send it back
 *	not to me -> ignore
 *------------------------------------------------------------------------*/
-void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interface){
+void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interfaceName){
 	printf("--function: handleArp-- \n");
 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
 	
@@ -314,7 +314,7 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 void generateArpRequest(struct sr_instance* sr, char* interfaceName){
 	printf("--function: generateArpRequest-- \n");
 	
-	struct sr_if* interface = sr_get_interface(sr, interfaceName)
+	struct sr_if* interface = sr_get_interface(sr, interfaceName);
 	sr_ethernet_hdr_t* ethrheader = malloc(sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
 	
 	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
@@ -346,7 +346,7 @@ void forwardIP(){
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interface){
+void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interfaceName){
 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
 	
 	printf("--function: handleIP-- \n");
