@@ -129,6 +129,14 @@ return NULL;
 }
 
 /*------------------------------------------------------------------------
+* Method: sendEchoReply
+* Sends an echo reply
+*-------------------------------------------------------------------------*/
+void sendEchoReply(){
+
+}
+
+/*------------------------------------------------------------------------
 * Method: sendICMP
 * Given an ICMP description *(and probably destination?), this function sends a ICMP packet.
 *-------------------------------------------------------------------------*/
@@ -144,6 +152,7 @@ void sendICMP(uint8_t description){
 		printf("creating ECHO_REPLY\n");
 		type=0;
 		code=0;
+		sendEchoReply();
 		break;
 	case DESTINATION_UNREACHABLE:
 		printf("creating DESTINATION_UNREACHABLE\n");
@@ -194,6 +203,9 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader){
 	printf("icmpheader->icmp_type: %u\n", icmpheader->icmp_type);
 	printf("icmpheader->icmp_code: %u\n", icmpheader->icmp_code);
 	/*uint16_t givenChecksum = icmpheader->icmp_sum;
+	
+	uint16_t cksum(icmpheader, int len);
+	
 	icmpheader->icmp_sum = 0;
 	uint16_t calculatedChecksum = sha1(icmpheader); OH QUESTION*/
 	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0);
@@ -249,6 +261,8 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
 	
 	printf("--function: handleIP-- \n");
+	len = len - (sizeof(*ethrheader));
+	printf("len: %i\n", len);
 	printf("---MY IP HEADER INFO---\n");
   	print_hdr_ip((uint8_t*)ipheader);
  	printf("--------------------------\n");
