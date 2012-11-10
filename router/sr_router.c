@@ -94,7 +94,7 @@ return 0;
 *	request to me -> construct reply, send it back
 *	not to me -> ignore
 *------------------------------------------------------------------------*/
-void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len){
+void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interface){
 	printf("--function: handleArp-- \n");
 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
 	
@@ -306,6 +306,29 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 }
 
 /*------------------------------------------------------------------------
+* Method: generateArpRequest
+* generates an ARp request
+* 
+*-------------------------------------------------------------------------*/
+
+void generateArpRequest(struct sr_instance* sr, char* interfaceName){
+	printf("--function: generateArpRequest-- \n");
+	
+	struct sr_if* interface = sr_get_interface(sr, interfaceName)
+	sr_ethernet_hdr_t* ethrheader = malloc(sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
+	
+	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
+	ethrheader->ether_shost= interface->addr;
+	ethrheader->ether_type = htons(ethertype_arp);
+	
+	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
+  	print_hdr_eth((uint8_t *)ethrheader);
+ 	printf("--------------------------------------------\n");
+	
+	
+}
+
+/*------------------------------------------------------------------------
 * Method: forwardIP
 * 
 *-------------------------------------------------------------------------*/
@@ -323,7 +346,7 @@ void forwardIP(){
 * reply; else ICMP port unreachable reply
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
-void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len){
+void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interface){
 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
 	
 	printf("--function: handleIP-- \n");
@@ -371,7 +394,7 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
   
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
-  /*sr_print_if_list(sr);*/
+  sr_print_if_list(sr);
   
   printf("---OFFICIAL PACKET HEADER INFO---\n");
   print_hdrs(packet, len);
@@ -384,10 +407,11 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
-  	handleArp(sr, ethrheader, len);
+  	generateArpRequest(sr, interface);
+  	handleArp(sr, ethrheader, len, interface);
   	break;
   case IP: 
-  	handleIP(sr, ethrheader, len);
+  	handleIP(sr, ethrheader, len, interface);
   	break;
   default: 
   	printf("!!Ethernet frame type not recognizable - author-Jacob in sr_hadlepacket!!\n");
