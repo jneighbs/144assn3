@@ -383,11 +383,11 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	uint8_t longestPrefix = 0;
 	
 	while(tableEntry){
-		uint32_t mask = sr->mask;
-		uint32_t dest = sr->dest;
-		uint32_t gateway = sr->gw;
+		uint32_t mask = tableEntry->mask;
+		uint32_t dest = tableEntry->dest;
+		uint32_t gateway = tableEntry->gw;
 		
-		if(desitnationIP & mask == dest){
+		if(destinationIP & mask == dest){
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
 			if(longestPrefix < curPrefixLen){
 				longestPrefix = curPrefixLen;
