@@ -381,7 +381,7 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	struct sr_rt* tableEntry = sr->routing_table;
 	uint32_t nextHopIP = 0;
 	uint8_t longestPrefix = 0;
-	---printf("sizeof(tableEntry->mask): %u\n", sizeof(tableEntry->mask));---
+	printf("---sizeof(tableEntry->mask): %ul\n---", sizeof(tableEntry->mask));
 	
 	while(tableEntry){
 	/*	uint32_t mask = tableEntry->mask;
