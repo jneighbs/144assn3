@@ -386,15 +386,16 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	
 	
 	while(tableEntry){
-	char* bob1 = inet_ntoa(tableEntry->mask);
-	printf("bob1: %s\n", bob1);
-	char* bob2 = inet_ntoa(tableEntry->dest);
-	printf("bob2: %s\n", bob2);
-	char* bob3 = inet_ntoa(tableEntry->gw);
-	printf("bob3: %s\n", bob3);
-		/*uint32_t mask = tableEntry->mask->s_addr;
-		uint32_t dest = tableEntry->dest->s_addr;
-		uint32_t gateway = tableEntry->gw->s_addr;
+		char* charMask = inet_ntoa(tableEntry->mask);
+		printf("charMask: %s\n", charMask);
+		char* charDest = inet_ntoa(tableEntry->dest);
+		printf("charDest: %s\n", charDest);
+		char* charGateway = inet_ntoa(tableEntry->gw);
+		printf("charGateway: %s\n", charGateway);
+		
+		uint32_t mask = atoi(charMask);
+		uint32_t dest = atoi(charMask);
+		uint32_t gateway = atoi(charMask);
 		
 		printf("---mask: %u\n---", mask);
 		printf("---dest: %u\n---", dest);
