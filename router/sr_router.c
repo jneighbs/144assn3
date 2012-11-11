@@ -358,7 +358,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 	printf("--function: turnMaskIntoPrefixLen-- \n");
 	uint8_t count = 0;
-	uint32_t leadingBitTurnedOn = 2^31;
+	uint32_t leadingBitTurnedOn = 4294967295;
 	while(mask & leadingBitTurnedOn){
 		print_addr_ip_int(mask);
 		mask <<= mask;
@@ -387,49 +387,26 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	
 	while(tableEntry){
 	
-		uint32_t mask = tableEntry->mask.s_addr;
-		uint32_t dest = tableEntry->dest.s_addr;
-		uint32_t gateway = tableEntry->gw.s_addr;
-	
 		char* charMask = inet_ntoa(tableEntry->mask);
 		printf("charMask: %s\n", charMask);
 		char* charDest = inet_ntoa(tableEntry->dest);
 		printf("charDest: %s\n", charDest);
 		char* charGateway = inet_ntoa(tableEntry->gw);
 		printf("charGateway: %s\n", charGateway);
-		/*
-		void* blobmask = tableEntry->mask.s_addr;
-		void* blobdest = tableEntry->dest.s_addr;
-		void* blobgw = tableEntry->gw.s_addr;
-		
-		uint32_t mask;
-		uint32_t dest;
-		uint32_t gateway;
-		
-		memcpy(&mask, blobmask, 4);
-		memcpy(&dest, blobdest, 4);
-		memcpy(&gateway, blobgw, 4);
-		*/
-		printf("---mask: %u---\n", mask);
-		printf("---dest: %u---\n", dest);
-		printf("---gateway: %u---\n", gateway);
-		
-		/*
-		int x = sizeof(charMask);
-		printf("size of charmask: %i\n",x);
-		
-		uint32_t mask = (uint32_t)atoi(charMask);
-		uint32_t dest = (uint32_t)atoi(charDest);
-		uint32_t gateway = (uint32_t)atoi(charGateway);
-		
-		printf("---mask: %u---\n", mask);
-		printf("---dest: %u---\n", dest);
-		printf("---gateway: %u---\n", gateway);
-		*/
-		
+	
+	
+		uint32_t mask = tableEntry->mask.s_addr;
+		uint32_t dest = tableEntry->dest.s_addr;
+		uint32_t gateway = tableEntry->gw.s_addr;
+	
+		print_addr_ip_int(mask);
+		print_addr_ip_int(dest);
+		print_addr_ip_int(gateway);
+	
 		if((destinationIP & mask) == dest){
 			printf("destinationIP & mask: match \n");
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
+			printf("curPrefixLen: %u\nlongestPrefix: %u\n", curPrefixLen,longestPrefix);
 			if(longestPrefix < curPrefixLen){
 				longestPrefix = curPrefixLen;
 			 	nextHopIP = gateway;
