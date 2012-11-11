@@ -381,19 +381,20 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	struct sr_rt* tableEntry = sr->routing_table;
 	uint32_t nextHopIP = 0;
 	uint8_t longestPrefix = 0;
+	---printf("sizeof(tableEntry->mask): %u\n", sizeof(tableEntry->mask));---
 	
 	while(tableEntry){
-		uint32_t mask = tableEntry->mask;
+	/*	uint32_t mask = tableEntry->mask;
 		uint32_t dest = tableEntry->dest;
 		uint32_t gateway = tableEntry->gw;
 		
-		if(destinationIP & mask == dest){
+		if((destinationIP & mask) == dest){
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
 			if(longestPrefix < curPrefixLen){
 				longestPrefix = curPrefixLen;
 			 	nextHopIP = gateway;
 			 }
-		}
+		}*/
 		tableEntry = tableEntry->next;
 	}
 	printf("destinationIP: \n");
