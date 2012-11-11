@@ -393,13 +393,13 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 		char* charGateway = inet_ntoa(tableEntry->gw);
 		printf("charGateway: %s\n", charGateway);
 		
-		uint32_t mask = atoi(charMask);
-		uint32_t dest = atoi(charMask);
-		uint32_t gateway = atoi(charMask);
+		uint32_t mask = (uint32_t)atoi(charMask);
+		uint32_t dest = (uint32_t)atoi(charDest);
+		uint32_t gateway = (uint32_t)atoi(charGateway);
 		
-		printf("---mask: %u\n---", mask);
-		printf("---dest: %u\n---", dest);
-		printf("---gateway: %u\n---", gateway);
+		printf("---mask: %u---\n", mask);
+		printf("---dest: %u---\n", dest);
+		printf("---gateway: %u---\n", gateway);
 		
 		if((destinationIP & mask) == dest){
 			printf("destinationIP & mask: match \n");
