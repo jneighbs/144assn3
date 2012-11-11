@@ -364,7 +364,7 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	uint8_t longestPrefix = 0;
 	
 	while(tableEntry){
-	
+	break;
 	}
 	printf("destinationIP: ");
 	print_addr_ip_int(destinationIP);
