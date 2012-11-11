@@ -390,8 +390,8 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	printf("bob1: %s\n", bob1);
 	char* bob2 = inet_ntoa(tableEntry->dest);
 	printf("bob2: %s\n", bob2);
-	char* bob2 = inet_ntoa(tableEntry->gw);
-	printf("bob2: %s\n", bob2);
+	char* bob3 = inet_ntoa(tableEntry->gw);
+	printf("bob3: %s\n", bob3);
 		/*uint32_t mask = tableEntry->mask->s_addr;
 		uint32_t dest = tableEntry->dest->s_addr;
 		uint32_t gateway = tableEntry->gw->s_addr;
