@@ -17,6 +17,7 @@
 #include <assert.h>
 
 
+
 #include "sr_if.h"
 #include "sr_rt.h"
 #include "sr_router.h"
@@ -293,10 +294,11 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 	
 	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
 		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);
+		/*
 		printf("---MY ICMP HEADER INFO---\n");
   		print_hdr_icmp((uint8_t*)icmpheader);
  		printf("--------------------------\n");
- 		
+ 		*/
 		if(receiveValidEchoRequest(icmpheader, len)){
 			sendICMP(ECHO_REPLY, ipheader, sr);
 		}
@@ -350,14 +352,37 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 }
 
 /*------------------------------------------------------------------------
+* Method: getNextHopIPFromRouter
+* 
+*-------------------------------------------------------------------------*/
+
+void getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
+	printf("--function: getNextHopIPFromRouter-- \n");
+	
+	struct sr_rt* tableEntry = sr->routing_table;
+	uint32_t nextHopIP = 0;
+	uint8_t longestPrefix = 0;
+	
+	while(tableEntry){
+	
+	}
+	printf("destinationIP: ");
+	print_addr_ip_int(destinationIP);
+	printf("nextHopIP: ");
+	print_addr_ip_int(nextHopIP);
+	return nextHopIP;
+}
+
+/*------------------------------------------------------------------------
 * Method: forwardIP
 * 
 *-------------------------------------------------------------------------*/
 
-void forwardIP(){
+void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: forwardIP-- \n");
 	/*sanity check, decrement ttl, etc*/
-	/*fill this in*/
+	uint32_t nextHopIP = getNextHopIPFromRouter(sr, ipheader->ip_dst);
+	/*check arp cache stuff*/
 }
 
 /*------------------------------------------------------------------------
@@ -373,15 +398,16 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
 	printf("--function: handleIP-- \n");
 	len = len - (sizeof(*ethrheader));
 	printf("len: %i\n", len);
+	/*
 	printf("---MY IP HEADER INFO---\n");
   	print_hdr_ip((uint8_t*)ipheader);
  	printf("--------------------------\n");
- 	
+ 	*/
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	if(interface!=NULL){
 		ipToMe(sr, ipheader, len);
 	}else{
-		forwardIP();
+		forwardIP(sr, ipheader);
 	}
 }
 
@@ -406,11 +432,6 @@ void sr_handlepacket(struct sr_instance* sr,
         unsigned int len,
         char* interface/* lent */)
 {
-if(-1) printf("-1");
-if(0) printf("0");
-if(1) printf("1");
-if(2^31) printf("2^31");
-
   /* REQUIRES */
   assert(sr);
   assert(packet);
@@ -426,11 +447,11 @@ if(2^31) printf("2^31");
   printf("---OFFICIAL PACKET HEADER INFO---\n");
   print_hdrs(packet, len);
   printf("---------------------------------\n");
-  
+  /*
   printf("---MY ETHR HEADER INFO---\n");
   print_hdr_eth((uint8_t *)ethrheader);
   printf("--------------------------\n");
-  
+  */
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
