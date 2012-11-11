@@ -358,9 +358,10 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 	printf("--function: turnMaskIntoPrefixLen-- \n");
 	uint8_t count = 0;
-	uint32_t leadingBitTurnedOn = 2^31;/*2147483648*/
+	uint32_t leadingBitTurnedOn = 2^31;
+	printf("leadingBitTurnedOn (hopefully 2147483648): %u\n", leadingBitTurnedOn);
 	while(mask & leadingBitTurnedOn){
-		printf("mask & leadingBitTurnedOn == true");
+		printf("mask & leadingBitTurnedOn == true\n");
 		print_addr_ip_int(mask);
 		mask = mask<<1;
 		count++;
