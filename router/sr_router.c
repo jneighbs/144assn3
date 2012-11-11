@@ -360,6 +360,7 @@ uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 	uint8_t count = 0;
 	uint32_t leadingBitTurnedOn = 2^31;/*2147483648*/
 	while(mask & leadingBitTurnedOn){
+		printf("mask & leadingBitTurnedOn == true");
 		print_addr_ip_int(mask);
 		mask = mask<<1;
 		count++;
@@ -395,9 +396,9 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 		printf("charGateway: %s\n", charGateway);
 	
 	
-		uint32_t mask = tableEntry->mask.s_addr;
-		uint32_t dest = tableEntry->dest.s_addr;
-		uint32_t gateway = tableEntry->gw.s_addr;
+		uint32_t mask = htonl(tableEntry->mask.s_addr);
+		uint32_t dest = htonl(tableEntry->dest.s_addr);
+		uint32_t gateway = htonl(tableEntry->gw.s_addr);
 	
 		print_addr_ip_int(mask);
 		print_addr_ip_int(dest);
