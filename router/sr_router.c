@@ -367,9 +367,9 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	break;
 	}
 	printf("destinationIP: \n");
-	/*print_addr_ip_int(destinationIP);*/
+	print_addr_ip_int(destinationIP);
 	printf("nextHopIP: \n");
-	/*print_addr_ip_int(nextHopIP);*/
+	print_addr_ip_int(nextHopIP);
 	return nextHopIP;
 }
 
@@ -382,11 +382,9 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: forwardIP-- \n");
 	/*sanity check, decrement ttl, etc*/
 	
-	print_hdr_ip((uint8_t*)ipheader);
-	uint32_t destinationIP = ipheader->ip_dst;
-	print_addr_ip_int(destinationIP);
 	
-	uint32_t nextHopIP = getNextHopIPFromRouter(sr, ipheader->ip_dst);
+	uint32_t destinationIP = ntohl(ipheader->ip_dst);
+	uint32_t nextHopIP = getNextHopIPFromRouter(sr, destinationIP);
 	/*check arp cache stuff*/
 }
 
