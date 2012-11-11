@@ -352,6 +352,25 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 }
 
 /*------------------------------------------------------------------------
+* Method: turnMaskIntoPrefixLen
+* 
+*-------------------------------------------------------------------------*/
+uint8_t turnMaskIntoPrefixLen(uint32_t mask){
+	printf("--function: turnMaskIntoPrefixLen-- \n");
+	uint8_t count = 0;
+	uint32_t leadingBitTurnedOn = 2^31;
+	while(mask & leadingBitTurnedOn){
+		print_addr_ip_int(mask);
+		mask <<= mask;
+		count++;
+	}
+	printf("count: %u\n", count);
+	return count;
+}
+
+
+
+/*------------------------------------------------------------------------
 * Method: getNextHopIPFromRouter
 * 
 *-------------------------------------------------------------------------*/
@@ -364,7 +383,18 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	uint8_t longestPrefix = 0;
 	
 	while(tableEntry){
-	break;
+		uint32_t mask = sr->mask;
+		uint32_t dest = sr->dest;
+		uint32_t gateway = sr->gw;
+		
+		if(desitnationIP & mask == dest){
+			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
+			if(longestPrefix < curPrefixLen){
+				longestPrefix = curPrefixLen;
+			 	nextHopIP = gateway;
+			 }
+		}
+		tableEntry = tableEntry->next;
 	}
 	printf("destinationIP: \n");
 	print_addr_ip_int(destinationIP);
