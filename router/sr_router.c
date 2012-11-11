@@ -356,7 +356,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 * 
 *-------------------------------------------------------------------------*/
 
-void getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
+uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	printf("--function: getNextHopIPFromRouter-- \n");
 	
 	struct sr_rt* tableEntry = sr->routing_table;
