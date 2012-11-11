@@ -339,9 +339,14 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
  	arpheader->ar_sip = interface->ip;
  	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
  	
- 	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
+ 	printf("---MY generateArpRequest ARP HEADER INFO---\n");
   	print_hdr_arp((uint8_t *)arpheader);
  	printf("--------------------------------------------\n");
+ 	
+ 	/*
+ 	Needs to either send packet or return void* packet
+ 	Dont foget to free the packet
+ 	*/
 }
 
 /*------------------------------------------------------------------------
@@ -401,6 +406,11 @@ void sr_handlepacket(struct sr_instance* sr,
         unsigned int len,
         char* interface/* lent */)
 {
+if(-1) printf("-1");
+if(0) printf("0");
+if(1) printf("1");
+if(2^31) printf("2^31");
+
   /* REQUIRES */
   assert(sr);
   assert(packet);
@@ -411,6 +421,7 @@ void sr_handlepacket(struct sr_instance* sr,
   
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
   sr_print_if_list(sr);
+  sr_print_routing_table(sr);
   
   printf("---OFFICIAL PACKET HEADER INFO---\n");
   print_hdrs(packet, len);
