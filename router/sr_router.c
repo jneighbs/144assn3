@@ -394,7 +394,7 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 		printf("---mask: %u\n---", mask);
 		printf("---dest: %u\n---", dest);
 		printf("---gateway: %u\n---", gateway);
-		*/
+		
 		if((destinationIP & mask) == dest){
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
 			if(longestPrefix < curPrefixLen){
@@ -402,6 +402,7 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 			 	nextHopIP = gateway;
 			 }
 		}
+		*/
 		tableEntry = tableEntry->next;
 	}
 	printf("destinationIP: \n");
