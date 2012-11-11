@@ -384,13 +384,13 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	
 	
 	while(tableEntry){
-		uint32_t mask = (uint32_t)tableEntry->mask;
-		uint32_t dest = (uint32_t)tableEntry->dest;
-		uint32_t gateway = (uint32_t)tableEntry->gw;
+		uint32_t mask = (uint32_t)tableEntry->mask->s_addr;
+		uint32_t dest = (uint32_t)tableEntry->dest->s_addr;
+		uint32_t gateway = (uint32_t)tableEntry->gw->s_addr;
 		
-		printf("---mask: %lu\n---", mask);
-		printf("---mask: %lu\n---", mask);
-		printf("---mask: %lu\n---", mask);
+		printf("---mask: %llu\n---", mask);
+		printf("---mask: %llu\n---", mask);
+		printf("---mask: %llu\n---", mask);
 		
 		if((destinationIP & mask) == dest){
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
