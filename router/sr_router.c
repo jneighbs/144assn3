@@ -364,7 +364,7 @@ uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 		mask <<= mask;
 		count++;
 	}
-	printf("count: %u\n", count);
+	printf("mask len: %u\n", count);
 	return count;
 }
 
@@ -402,13 +402,14 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 		printf("---gateway: %u\n---", gateway);
 		
 		if((destinationIP & mask) == dest){
+			printf("destinationIP & mask: match \n");
 			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
 			if(longestPrefix < curPrefixLen){
 				longestPrefix = curPrefixLen;
 			 	nextHopIP = gateway;
 			 }
 		}
-		*/
+		
 		tableEntry = tableEntry->next;
 	}
 	printf("destinationIP: \n");
