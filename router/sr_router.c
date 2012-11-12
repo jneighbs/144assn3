@@ -75,9 +75,9 @@ int determineEthernetFrameType(sr_ethernet_hdr_t* ethrheader)
 {
 	printf("--Function: determineEthernetFrameType-- \n");
 
-	printf("ethertype_arp: %u\n", ethertype_arp);
+	/*printf("ethertype_arp: %u\n", ethertype_arp);
 	printf("ethertype_ip: %u\n", ethertype_ip);
-	printf("ntohs(ethrheader->ether_type): %u\n", ntohs(ethrheader->ether_type));
+	printf("ntohs(ethrheader->ether_type): %u\n", ntohs(ethrheader->ether_type));*/
 
 	if(ntohs(ethrheader->ether_type) == ethertype_arp){
 		printf("Received arp packet \n");
@@ -89,6 +89,38 @@ int determineEthernetFrameType(sr_ethernet_hdr_t* ethrheader)
 }
 return 0;
 }
+
+/*------------------------------------------------------------------------
+* Method: isArpReplyToMe
+* 
+*------------------------------------------------------------------------*/
+int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
+	printf("--function: isArpReplyToMe-- \n");
+	printf("interfaceIP: %u\n", interfaceIP);
+	printf("arpheader->ar_tip: %u\n", arpheader->ar_tip);
+	if(arpheader->ar_op==arp_op_reply && arpheader->ar_tip == interfaceIP ){
+		printf("Match: isArpReplyToMe\n");
+		return(1);
+	}
+	return 0;
+}
+
+/*------------------------------------------------------------------------
+* Method: isArpRequestToMe
+* 
+*------------------------------------------------------------------------*/
+int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
+	printf("--function: isArpRequestToMe-- \n");
+	printf("interfaceIP: %u\n", interfaceIP);
+	printf("arpheader->ar_tip: %u\n", arpheader->ar_tip);
+	if(arpheader->ar_op==arp_op_request && arpheader->ar_tip == interfaceIP ){
+		printf("Match: isArpRequestToMe\n");
+		return(1);
+	}
+	return 0;
+}
+
+
 
 /*------------------------------------------------------------------------
 * Method: handleArp
@@ -104,6 +136,14 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
 	printf("---MY ARP HEADER INFO---\n");
   	print_hdr_arp((uint8_t *)arpheader);
   	printf("--------------------------\n");
+  	
+  	struct sr_if* interface = sr_get_interface(sr,interfaceName);
+  	uint32_t interfaceIP = interface->ip;
+  	if(isArpRequestToMe(arpheader, interfaceIP)){
+  		printf("Match: isArpRequestToMe :)\n");
+  	} else if(isArpReplyToMe(arpheader, interfaceIP)){
+  		printf("Match: isArpReplyToMe :)\n");
+  	}
 }
 
 /*------------------------------------------------------------------------
@@ -359,9 +399,9 @@ uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 	printf("--function: turnMaskIntoPrefixLen-- \n");
 	uint8_t count = 0;
 	uint32_t leadingBitTurnedOn = 0x80000000;
-	printf("leadingBitTurnedOn (hopefully 2147483648): %u\n", leadingBitTurnedOn);
+	/*printf("leadingBitTurnedOn (hopefully 2147483648): %u\n", leadingBitTurnedOn);*/
 	while(mask & leadingBitTurnedOn){
-		printf("mask & leadingBitTurnedOn == true\n");
+		/*printf("mask & leadingBitTurnedOn == true\n");*/
 		print_addr_ip_int(mask);
 		mask = mask<<1;
 		count++;
@@ -413,6 +453,7 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 				longestPrefix = curPrefixLen;
 			 	nextHopIP = gateway;
 			 }
+			 printf("newLongestPrefix: %u\n",longestPrefix);
 		}
 		
 		tableEntry = tableEntry->next;
@@ -492,7 +533,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(interface);
   
   printf("--Function: sr_handlepacket-- \n");
-  printf("*** -> Received packet of length %d \n",len);
+  /*printf("*** -> Received packet of length %d \n",len);*/
   
   sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet;
   sr_print_if_list(sr);
@@ -509,7 +550,6 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
-  	generateArpRequest(sr, interface, 0);
   	handleArp(sr, ethrheader, len, interface);
   	break;
   case IP: 
