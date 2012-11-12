@@ -96,7 +96,7 @@ return 0;
 *------------------------------------------------------------------------*/
 int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	printf("--function: isArpReplyToMe-- \n");
-	printf("interfaceIP: \n", interfaceIP);
+	printf("interfaceIP: \n");
 	print_addr_ip_int(interfaceIP);
 	printf("arpheader->ar_tip: \n");
 	print_addr_ip_int(arpheader->ar_tip);
@@ -115,7 +115,7 @@ int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 *------------------------------------------------------------------------*/
 int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	printf("--function: isArpRequestToMe-- \n");
-	printf("interfaceIP: \n", interfaceIP);
+	printf("interfaceIP: \n");
 	print_addr_ip_int(interfaceIP);
 	printf("arpheader->ar_tip: \n");
 	print_addr_ip_int(arpheader->ar_tip);
