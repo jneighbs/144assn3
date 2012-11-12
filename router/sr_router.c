@@ -96,8 +96,12 @@ return 0;
 *------------------------------------------------------------------------*/
 int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	printf("--function: isArpReplyToMe-- \n");
-	printf("interfaceIP: %u\n", interfaceIP);
-	printf("arpheader->ar_tip: %u\n", arpheader->ar_tip);
+	printf("interfaceIP: \n", interfaceIP);
+	print_addr_ip_int(interfaceIP);
+	printf("arpheader->ar_tip: \n");
+	print_addr_ip_int(arpheader->ar_tip);
+	printf("arpheader->ar_op: %u\n", arpheader->ar_op);
+	printf("arp_op_reply: %u\n", arp_op_reply);
 	if(arpheader->ar_op==arp_op_reply && arpheader->ar_tip == interfaceIP ){
 		printf("Match: isArpReplyToMe\n");
 		return(1);
@@ -111,9 +115,14 @@ int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 *------------------------------------------------------------------------*/
 int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	printf("--function: isArpRequestToMe-- \n");
-	printf("interfaceIP: %u\n", interfaceIP);
-	printf("arpheader->ar_tip: %u\n", arpheader->ar_tip);
-	if(arpheader->ar_op==arp_op_request && arpheader->ar_tip == interfaceIP ){
+	printf("interfaceIP: \n", interfaceIP);
+	print_addr_ip_int(interfaceIP);
+	printf("arpheader->ar_tip: \n");
+	print_addr_ip_int(arpheader->ar_tip);
+	printf("arpheader->ar_op: %u\n", arpheader->ar_op);
+	printf("arp_op_request: %u\n", arp_op_request);
+	
+	if(arpheader->ar_op == arp_op_request && arpheader->ar_tip == interfaceIP ){
 		printf("Match: isArpRequestToMe\n");
 		return(1);
 	}
