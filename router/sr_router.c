@@ -177,8 +177,8 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
 * 
 *-------------------------------------------------------------------------*/
 
-void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incomingArpheader, struct sr_instance* sr, char* interfaceName){
-	printf("--function: generateArpReply-- \n");
+void generateAndSendArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incomingArpheader, struct sr_instance* sr, char* interfaceName){
+	printf("--function: generateAndSendArpReply-- \n");
 	
 	struct sr_if* interface = sr_get_interface(sr, interfaceName);
 	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
@@ -189,7 +189,7 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
 	memcpy(outgoingEthrheader->ether_dhost,incomingEthrheader->ether_shost,ETHER_ADDR_LEN);	
 	memcpy(outgoingEthrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
 
-	printf("---MY generateArpReply ETHR HEADER INFO---\n");
+	printf("---MY generateAndSendArpReply ETHR HEADER INFO---\n");
   	print_hdr_eth((uint8_t *)outgoingEthrheader);
  	printf("--------------------------------------------\n");
  	
@@ -202,12 +202,65 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
  	memcpy(outgoingArpheader->ar_tha,incomingArpheader->ar_sha,ETHER_ADDR_LEN);
  	outgoingArpheader->ar_tip = incomingArpheader->ar_sip;
  	
- 	printf("---MY generateArpReply ARP HEADER INFO---\n");
+ 	printf("---MY generateAndSendArpReply ARP HEADER INFO---\n");
   	print_hdr_arp((uint8_t *)outgoingArpheader);
  	printf("--------------------------------------------\n");
  	
  	sr_send_packet(sr,(uint8_t*)outgoingEthrheader,packetSize,interfaceName);
  	free(outgoingEthrheader);
+}
+
+/*------------------------------------------------------------------------
+* Method: cacheReplyAndSendPackets
+*
+*------------------------------------------------------------------------*/
+void cacheReplyAndSendPackets(){
+	printf("--function: cacheReplyAndSendPackets-- \n");
+	
+		/*NEED TO VERIFY THIS STUFF - i htink it works but i havent seen it in action*/
+  		
+  		struct sr_arpcache* cache = &(sr->cache);
+  		unsigned char senderMac[ETHER_ADDR_LEN];
+  		memcpy(senderMac, arpheader->ar_sha, ETHER_ADDR_LEN);
+  		uint32_t senderIP = ntohl(arpheader->ar_sip);
+  		
+  		printf("SenderMac -> SederIP mapping: \n");
+  		print_addr_eth(senderMac);
+  		print_addr_ip_int(senderIP);
+  		
+  		printf("+++Arp cache before insertion+++");
+  		sr_arpcache_dump(cache);
+
+  		
+  		struct sr_arpreq* request = sr_arpcache_insert(cache,senderMac,senderIP);
+        if(request){
+        	 /*send all packets on the req->packets linked list*/
+        	 struct sr_packet* packet = request->packets;
+        	 while(packet){
+        		printf("SENDING PACKET FROM QUEUE\n");
+        		printf("packet->len: %u\n", packet->len);
+        		printf("interface its leaving from: \n");
+        		sr_print_if(sr_get_interface(sr, packet->iface));
+        		printf("header info: \n");
+        		print_hdrs(packet->buf, packet->len);
+        		sr_send_packet(sr, packet->buf, packet->len, packet->iface);
+        	 	packet=packet->next;
+        	 }
+      		 sr_arpreq_destroy(cache, request);
+        }
+        
+        printf("+++Arp cache after insertion+++");
+        sr_arpcache_dump(cache);
+        
+        
+        
+        struct sr_packet {
+    uint8_t *buf;               /* A raw Ethernet frame, presumably with the dest MAC empty */
+    unsigned int len;           /* Length of raw Ethernet frame */
+    char *iface;                /* The outgoing interface */
+    struct sr_packet *next;
+};
+		
 }
 
 /*------------------------------------------------------------------------
@@ -230,28 +283,12 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   	
   	if(isArpRequestToMe(arpheader, interfaceIP)){
   		printf("Match: isArpRequestToMe :)\n");
-  		generateArpReply(ethrheader, arpheader, sr, interfaceName);
+  		generateAndSendArpReply(ethrheader, arpheader, sr, interfaceName);
   		
   		
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
-  		
-  		/*NEED TO TEST THIS STUFF*/
-  		
-  		struct sr_arpcache* cache = &(sr->cache);
-  		unsigned char senderMac[ETHER_ADDR_LEN];
-  		memcpy(senderMac, arpheader->ar_sha, ETHER_ADDR_LEN);
-  		uint32_t senderIP = ntohl(arpheader->ar_sip);
-  		
-  		printf("SenderMac -> SederIP mapping: \n");
-  		print_addr_eth(senderMac);
-  		print_addr_ip_int(senderIP);
-  		
-  		struct sr_arpreq* request = sr_arpcache_insert(cache,senderMac,senderIP);
-        if(request){
-        	 /*send all packets on the req->packets linked list*/
-      		 sr_arpreq_destroy(cache, request);
-        }
+  		cacheReplyAndSendPackets(sr, arpheader);
   	}
 }
 
