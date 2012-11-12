@@ -129,7 +129,88 @@ int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	return 0;
 }
 
+/*------------------------------------------------------------------------
+* Method: generateArpRequest
+* generates an ARp request
+* 
+*-------------------------------------------------------------------------*/
 
+void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP){
+	printf("--function: generateArpRequest-- \n");
+	
+	struct sr_if* interface = sr_get_interface(sr, interfaceName);
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
+	
+	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
+	ethrheader->ether_type = htons(ethertype_arp);
+	
+	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
+  	print_hdr_eth((uint8_t *)ethrheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
+ 	
+ 	arpheader->ar_hrd=htons(1);
+ 	arpheader->ar_pro=htons(ethertype_ip);
+ 	arpheader->ar_hln=ETHER_ADDR_LEN;
+ 	arpheader->ar_pln=IP_ADDR_LEN;
+ 	arpheader->ar_op=htons(arp_op_request);
+ 	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
+ 	arpheader->ar_sip = interface->ip;
+ 	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
+ 	
+ 	printf("---MY generateArpRequest ARP HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)arpheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	/*
+ 	Needs to either send packet or return void* packet
+ 	Dont foget to free the packet
+ 	*/
+}
+
+/*------------------------------------------------------------------------
+* Method: generateArpReply
+* generates an ARP reply from an arp request
+* 
+*-------------------------------------------------------------------------*/
+
+void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incomingArpheader, struct sr_instance* sr, char* interfaceName){
+	printf("--function: generateArpReply-- \n");
+	
+	struct sr_if* interface = sr_get_interface(sr, interfaceName);
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	sr_ethernet_hdr_t* outgoingEthrheader = malloc(packetSize);
+	
+	memcpy(outgoingEthrheader,incomingEthrheader,packetSize);
+	
+	outgoingEthrheader->ether_dhost = incomingEthrheader->ether_shost;	
+	memcpy(outgoingEthrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
+
+	printf("---MY generateArpReply ETHR HEADER INFO---\n");
+  	print_hdr_eth((uint8_t *)outgoingEthrheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	sr_arp_hdr_t* outgoingArpheader = (sr_arp_hdr_t*)(outgoingEthrheader+1);
+ 	
+ 	outgoingArpheader->ar_op=htons(arp_op_reply);
+ 	
+ 	memcpy(outgoingArpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
+ 	outgoingArpheader->ar_sip = incomingArpheader->ar_tip;
+ 	outgoingArpheader->ar_tha = incomingArpheader->ar_sha;
+ 	outgoingArpheader->ar_tip = incomingArpheader->ar_sip;
+ 	
+ 	printf("---MY generateArpReply ARP HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)arpheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	/*
+ 	Needs to either send packet or return void* packet
+ 	Dont foget to free the packet
+ 	*/
+}
 
 /*------------------------------------------------------------------------
 * Method: handleArp
@@ -148,8 +229,11 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   	
   	struct sr_if* interface = sr_get_interface(sr,interfaceName);
   	uint32_t interfaceIP = interface->ip;
+  	
   	if(isArpRequestToMe(arpheader, interfaceIP)){
   		printf("Match: isArpRequestToMe :)\n");
+  		generateArpReply(etherheader, arpheader, sr, interfaceName);
+  		
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
   	}
@@ -358,47 +442,6 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
 	/*If the packet isn't caught in one of the above conditions, ignore*/
 }
 
-/*------------------------------------------------------------------------
-* Method: generateArpRequest
-* generates an ARp request
-* 
-*-------------------------------------------------------------------------*/
-
-void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP){
-	printf("--function: generateArpRequest-- \n");
-	
-	struct sr_if* interface = sr_get_interface(sr, interfaceName);
-	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
-	
-	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
-	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
-	ethrheader->ether_type = htons(ethertype_arp);
-	
-	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
-  	print_hdr_eth((uint8_t *)ethrheader);
- 	printf("--------------------------------------------\n");
- 	
- 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
- 	
- 	arpheader->ar_hrd=htons(1);
- 	arpheader->ar_pro=htons(ethertype_ip);
- 	arpheader->ar_hln=ETHER_ADDR_LEN;
- 	arpheader->ar_pln=IP_ADDR_LEN;
- 	arpheader->ar_op=htons(1);
- 	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
- 	arpheader->ar_sip = interface->ip;
- 	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
- 	
- 	printf("---MY generateArpRequest ARP HEADER INFO---\n");
-  	print_hdr_arp((uint8_t *)arpheader);
- 	printf("--------------------------------------------\n");
- 	
- 	/*
- 	Needs to either send packet or return void* packet
- 	Dont foget to free the packet
- 	*/
-}
 
 /*------------------------------------------------------------------------
 * Method: turnMaskIntoPrefixLen
