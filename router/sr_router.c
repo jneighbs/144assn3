@@ -232,7 +232,7 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   	
   	if(isArpRequestToMe(arpheader, interfaceIP)){
   		printf("Match: isArpRequestToMe :)\n");
-  		generateArpReply(etherheader, arpheader, sr, interfaceName);
+  		generateArpReply(ethrheader, arpheader, sr, interfaceName);
   		
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
