@@ -207,7 +207,7 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
  	printf("--------------------------------------------\n");
  	
  	sr_send_packet(sr,(uint8_t*)outgoingEthrheader,packetSize,interfaceName);
- 	free(outgoingHeader);
+ 	free(outgoingEthrheader);
 }
 
 /*------------------------------------------------------------------------
