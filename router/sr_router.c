@@ -214,7 +214,7 @@ void generateAndSendArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t
 * Method: cacheReplyAndSendPackets
 *
 *------------------------------------------------------------------------*/
-void cacheReplyAndSendPackets(){
+void cacheReplyAndSendPackets(struct sr_instance* sr,sr_arp_hdr_t* arpheader){
 	printf("--function: cacheReplyAndSendPackets-- \n");
 	
 		/*NEED TO VERIFY THIS STUFF - i htink it works but i havent seen it in action*/
