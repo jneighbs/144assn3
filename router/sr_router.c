@@ -235,6 +235,20 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   		
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
+  		
+  		struct sr_arpcache* cache = sr->cache;
+  		unsigned char senderMac[ETHER_ADDR_LEN] = arpheader->ar_sha;
+  		uint32_t senderIP = ntohl(arpheader->ar_sip);
+  		
+  		printf("SenderMac -> SederIP mapping: \n");
+  		print_addr_eth(senderMac);
+  		print_addr_ip_int(senderIP);
+  		
+  		struct sr_arpreq* request = sr_arpcache_insert(cache,senderMac,ip);
+        if(request){
+        	 /*send all packets on the req->packets linked list*/
+      		 arpreq_destroy(cache, request);
+        }
   	}
 }
 
@@ -528,7 +542,24 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	
 	uint32_t destinationIP = ntohl(ipheader->ip_dst);
 	uint32_t nextHopIP = getNextHopIPFromRouter(sr, destinationIP);
+	
+	/*entry ip in network byte order*/
+	struct sr_arpentry* entry = sr_arpcache_lookup(sr->cache, htonl(nextHopIP));
+	if(entry){
+		printf("HIT! Destination in arp cache\n");
+		unsigned char destinationMac[ETHR_ADDR_LEN] = entry->mac;
+		((sr_ethernet_hdr_t*)(ipheader-1))->ether_dhost = destinationMac;
+		free(entry);
+	} else {
+		printf("MISS! Send arp request!\n");
+		/*
+		send arp request for next hop ip(if one hasnt been sent in last second), 
+		add packet to the queue of packets waiting on this arp request
+		resend arp request every sec for 5 secs
+		*/
+	}
 	/*check arp cache stuff*/
+	/* send it*/
 }
 
 /*------------------------------------------------------------------------
