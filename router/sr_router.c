@@ -236,7 +236,9 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
   		
-  		struct sr_arpcache* cache = sr->cache;
+  		/*NEED TO TEST THIS STUFF*/
+  		
+  		struct sr_arpcache* cache = &(sr->cache);
   		unsigned char senderMac[ETHER_ADDR_LEN] = arpheader->ar_sha;
   		uint32_t senderIP = ntohl(arpheader->ar_sip);
   		
@@ -244,10 +246,10 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   		print_addr_eth(senderMac);
   		print_addr_ip_int(senderIP);
   		
-  		struct sr_arpreq* request = sr_arpcache_insert(cache,senderMac,ip);
+  		struct sr_arpreq* request = sr_arpcache_insert(cache,senderMac,senderIP);
         if(request){
         	 /*send all packets on the req->packets linked list*/
-      		 arpreq_destroy(cache, request);
+      		 sr_arpreq_destroy(cache, request);
         }
   	}
 }
@@ -539,16 +541,19 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	printf("--function: forwardIP-- \n");
 	/*sanity check, decrement ttl, etc*/
 	
+	/*THIS ALL NEEDS TO BE THOROUGHLY TESTED*/
 	
 	uint32_t destinationIP = ntohl(ipheader->ip_dst);
 	uint32_t nextHopIP = getNextHopIPFromRouter(sr, destinationIP);
 	
 	/*entry ip in network byte order*/
-	struct sr_arpentry* entry = sr_arpcache_lookup(sr->cache, htonl(nextHopIP));
+	struct sr_arpentry* entry = sr_arpcache_lookup(&(sr->cache), htonl(nextHopIP));
 	if(entry){
 		printf("HIT! Destination in arp cache\n");
-		unsigned char destinationMac[ETHR_ADDR_LEN] = entry->mac;
+		/*surely this can be done better*/
+		unsigned char destinationMac[ETHER_ADDR_LEN] = entry->mac;
 		((sr_ethernet_hdr_t*)(ipheader-1))->ether_dhost = destinationMac;
+		
 		free(entry);
 	} else {
 		printf("MISS! Send arp request!\n");
