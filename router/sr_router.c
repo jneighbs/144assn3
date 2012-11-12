@@ -101,8 +101,8 @@ int isArpReplyToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	printf("arpheader->ar_tip: \n");
 	print_addr_ip_int(arpheader->ar_tip);
 	printf("arpheader->ar_op: %u\n", arpheader->ar_op);
-	printf("arp_op_reply: %u\n", arp_op_reply);
-	if(arpheader->ar_op==arp_op_reply && arpheader->ar_tip == interfaceIP ){
+	printf("ntohs(arp_op_reply): %u\n", ntohs(arp_op_reply));
+	if(ntohs(arpheader->ar_op)==arp_op_reply && arpheader->ar_tip == interfaceIP ){
 		printf("Match: isArpReplyToMe\n");
 		return(1);
 	}
@@ -119,10 +119,10 @@ int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	print_addr_ip_int(interfaceIP);
 	printf("arpheader->ar_tip: \n");
 	print_addr_ip_int(arpheader->ar_tip);
-	printf("arpheader->ar_op: %u\n", arpheader->ar_op);
+	printf("ntohs(arpheader->ar_op): %u\n", ntohs(arpheader->ar_op));
 	printf("arp_op_request: %u\n", arp_op_request);
 	
-	if(arpheader->ar_op == arp_op_request && arpheader->ar_tip == interfaceIP ){
+	if(ntohs(arpheader->ar_op) == arp_op_request && arpheader->ar_tip == interfaceIP ){
 		printf("Match: isArpRequestToMe\n");
 		return(1);
 	}
