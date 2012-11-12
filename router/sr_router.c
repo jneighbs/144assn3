@@ -206,10 +206,8 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
   	print_hdr_arp((uint8_t *)outgoingArpheader);
  	printf("--------------------------------------------\n");
  	
- 	/*
- 	Needs to either send packet or return void* packet
- 	Dont foget to free the packet
- 	*/
+ 	sr_send_packet(sr,(uint8_t*)outgoingEthrheader,packetSize,interfaceName)
+ 	free(outgoingHeader);
 }
 
 /*------------------------------------------------------------------------
@@ -233,6 +231,7 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   	if(isArpRequestToMe(arpheader, interfaceIP)){
   		printf("Match: isArpRequestToMe :)\n");
   		generateArpReply(ethrheader, arpheader, sr, interfaceName);
+  		
   		
   	} else if(isArpReplyToMe(arpheader, interfaceIP)){
   		printf("Match: isArpReplyToMe :)\n");
