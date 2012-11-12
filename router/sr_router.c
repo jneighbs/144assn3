@@ -239,7 +239,8 @@ void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned i
   		/*NEED TO TEST THIS STUFF*/
   		
   		struct sr_arpcache* cache = &(sr->cache);
-  		unsigned char senderMac[ETHER_ADDR_LEN] = arpheader->ar_sha;
+  		unsigned char senderMac[ETHER_ADDR_LEN];
+  		memcpy(senderMac, arpheader->ar_sha, ETHER_ADDR_LEN);
   		uint32_t senderIP = ntohl(arpheader->ar_sip);
   		
   		printf("SenderMac -> SederIP mapping: \n");
@@ -551,8 +552,10 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 	if(entry){
 		printf("HIT! Destination in arp cache\n");
 		/*surely this can be done better*/
-		unsigned char destinationMac[ETHER_ADDR_LEN] = entry->mac;
-		((sr_ethernet_hdr_t*)(ipheader-1))->ether_dhost = destinationMac;
+		unsigned char destinationMac[ETHER_ADDR_LEN];
+		memcpy(destinationMac, entry->mac, ETHER_ADDR_LEN);
+		memcpy(((sr_ethernet_hdr_t*)(ipheader-1))->ether_dhost, destinationMac, ETHER_ADDR_LEN);
+		/*test ^^^ */
 		
 		free(entry);
 	} else {
