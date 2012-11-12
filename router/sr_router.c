@@ -186,7 +186,7 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
 	
 	memcpy(outgoingEthrheader,incomingEthrheader,packetSize);
 	
-	outgoingEthrheader->ether_dhost = incomingEthrheader->ether_shost;	
+	memcpy(outgoingEthrheader->ether_dhost,incomingEthrheader->ether_shost,ETHER_ADDR_LEN);	
 	memcpy(outgoingEthrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
 
 	printf("---MY generateArpReply ETHR HEADER INFO---\n");
@@ -199,11 +199,11 @@ void generateArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t* incom
  	
  	memcpy(outgoingArpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
  	outgoingArpheader->ar_sip = incomingArpheader->ar_tip;
- 	outgoingArpheader->ar_tha = incomingArpheader->ar_sha;
+ 	memcpy(outgoingArpheader->ar_tha,incomingArpheader->ar_sha,ETHER_ADDR_LEN);
  	outgoingArpheader->ar_tip = incomingArpheader->ar_sip;
  	
  	printf("---MY generateArpReply ARP HEADER INFO---\n");
-  	print_hdr_arp((uint8_t *)arpheader);
+  	print_hdr_arp((uint8_t *)outgoingArpheader);
  	printf("--------------------------------------------\n");
  	
  	/*
