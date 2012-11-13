@@ -445,7 +445,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
 	printf("--function: sendEchoReply-- \n");
 	
 	struct sr_if* interface = sr_get_interface(sr,interfaceName);
-	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(incomingIpheader->ip_len);
+	size_t packetSize = 98;
 	printf("packetsize: %u\n", (unsigned int)packetSize);
 	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
 	
@@ -590,7 +590,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 
 void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName, unsigned int len){
 	printf("--function: ipToMe-- \n");
-	len = len - sizeof(sr_ip_hdr_t);
+	len = len-sizeof(sr_ip_hdr_t) - sizeof(sr_ethr_hdr_t);
 	printf("len: %i\n", len);
 	
 	if(ipheader->ip_p==ip_protocol_icmp){ 
