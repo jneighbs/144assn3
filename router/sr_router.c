@@ -574,9 +574,9 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 	icmpheader->icmp_sum = givenChecksum;
 	
 	printf("givenChecksum: %d\n", givenChecksum);
-	printf("calculatedChecksum: %d\n", calculatedChecksum);
+	/*printf("calculatedChecksum: %d\n", calculatedChecksum);*/
 	
-	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0 && givenChecksum == calculatedChecksum);
+	return (icmpheader->icmp_type==8 && icmpheader->icmp_code==0 /*&& givenChecksum == calculatedChecksum*/);
 }
 
 /*------------------------------------------------------------------------
