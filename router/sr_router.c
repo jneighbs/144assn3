@@ -129,50 +129,10 @@ int isArpRequestToMe(sr_arp_hdr_t* arpheader, uint32_t interfaceIP){
 	return 0;
 }
 
-/*------------------------------------------------------------------------
-* Method: generateArpRequest
-* generates an ARp request
-* 
-*-------------------------------------------------------------------------*/
 
-void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP){
-	printf("--function: generateArpRequest-- \n");
-	
-	struct sr_if* interface = sr_get_interface(sr, interfaceName);
-	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
-	
-	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
-	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
-	ethrheader->ether_type = htons(ethertype_arp);
-	
-	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
-  	print_hdr_eth((uint8_t *)ethrheader);
- 	printf("--------------------------------------------\n");
- 	
- 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
- 	
- 	arpheader->ar_hrd=htons(1);
- 	arpheader->ar_pro=htons(ethertype_ip);
- 	arpheader->ar_hln=ETHER_ADDR_LEN;
- 	arpheader->ar_pln=IP_ADDR_LEN;
- 	arpheader->ar_op=htons(arp_op_request);
- 	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
- 	arpheader->ar_sip = interface->ip;
- 	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
- 	
- 	printf("---MY generateArpRequest ARP HEADER INFO---\n");
-  	print_hdr_arp((uint8_t *)arpheader);
- 	printf("--------------------------------------------\n");
- 	
- 	/*
- 	Needs to either send packet or return void* packet
- 	Dont foget to free the packet
- 	*/
-}
 
 /*------------------------------------------------------------------------
-* Method: generateArpReply
+* Method: generateAndSendArpReply
 * generates an ARP reply from an arp request
 * 
 *-------------------------------------------------------------------------*/
@@ -217,7 +177,7 @@ void generateAndSendArpReply(sr_ethernet_hdr_t* incomingEthrheader, sr_arp_hdr_t
 void cacheReplyAndSendPackets(struct sr_instance* sr,sr_arp_hdr_t* arpheader){
 	printf("--function: cacheReplyAndSendPackets-- \n");
 	
-		/*NEED TO VERIFY THIS STUFF - i htink it works but i havent seen it in action*/
+		/*NEED TO VERIFY THIS STUFF - i think it works but i havent seen it in action*/
   		
   		struct sr_arpcache* cache = &(sr->cache);
   		unsigned char senderMac[ETHER_ADDR_LEN];
@@ -251,16 +211,7 @@ void cacheReplyAndSendPackets(struct sr_instance* sr,sr_arp_hdr_t* arpheader){
         
         printf("+++Arp cache after insertion+++");
         sr_arpcache_dump(cache);
-        
-        
-        
-        struct sr_packet {
-    uint8_t *buf;               /* A raw Ethernet frame, presumably with the dest MAC empty */
-    unsigned int len;           /* Length of raw Ethernet frame */
-    char *iface;                /* The outgoing interface */
-    struct sr_packet *next;
-};
-		
+        		
 }
 
 /*------------------------------------------------------------------------
@@ -270,7 +221,7 @@ void cacheReplyAndSendPackets(struct sr_instance* sr,sr_arp_hdr_t* arpheader){
 *	request to me -> construct reply, send it back
 *	not to me -> ignore
 *------------------------------------------------------------------------*/
-void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interfaceName){
+void handleArp(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, char* interfaceName){
 	printf("--function: handleArp-- \n");
 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
 	
@@ -318,55 +269,132 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 return NULL;
 }
 
+
+/*------------------------------------------------------------------------
+* Method: send
+* compute mac address, add it into packet, and send!
+*------------------------------------------------------------------------*/
+void send(struct sr_instance* sr, sr_arpentry* entry, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
+	printf("--function: send-- \n");
+
+	/*surely this can be done better*/
+	unsigned char destinationMac[ETHER_ADDR_LEN];
+	memcpy(destinationMac, entry->mac, ETHER_ADDR_LEN);
+	memcpy(ethrheader->ether_dhost, destinationMac, ETHER_ADDR_LEN);
+		
+	printf("These 3 destination macs should all be the same: \n");
+	print_addr_eth(destinationMac);
+	print_addr_eth(entry->mac);
+	print_addr_eth((((sr_ethernet_hdr_t*)ipheader)-1)->ether_dhost);
+		
+	sr_send_packet(sr, (uint8_t*)ethrheader, packetSize, interfaceName);
+}
+
+
+/*------------------------------------------------------------------------
+* Method: stash
+* send arp request for next hop ip(if one hasnt been sent in last second), 
+* add packet to the queue of packets waiting on this arp request,
+* resend arp request every sec for 5 secs
+*------------------------------------------------------------------------*/
+void stash(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
+	printf("--function: stash-- UNIMPLEMENTED\n");
+	
+	struct sr_arpreq* req = sr_arpcache_queuereq(&(sr->cache), nextHopIP,(uint8_t*)ethrheader,(unsigned int)packetSize, interfaceName);
+    handle_arpreq(req);
+    free(req);
+}
+
+/*------------------------------------------------------------------------
+* Method: sendOrStash
+* This method takes in the sr instance and the ethrheader of the packet that 
+* a sender wishes to send, computes the next hop ip, checks the arp cache to
+* for the related MAC address and if a hit, sends packet, if a miss, stores 
+* packet in arpreq to be sent later (when a arpreply is received)
+*------------------------------------------------------------------------*/
+int sendOrStash(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, size_t packetSize, char* interfaceName){
+	printf("--function: sendOrStash-- \n");
+
+	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
+	uint32_t destinationIP = ntohl(ipheader->ip_dst);
+	uint32_t nextHopIP = getNextHopIPFromRouter(sr, destinationIP);
+	
+	/*entry ip in network byte order*/
+	struct sr_arpentry* entry = sr_arpcache_lookup(&(sr->cache), htonl(nextHopIP));
+	if(entry){
+		printf("HIT! Destination in arp cache\n");
+		send(sr, entry, ethrheader, packetSize, interfaceName);
+		free(ethrheader);
+		free(entry);
+		
+	} else {
+		printf("MISS! Send arp request!\n");
+		stash(sr, interfaceName, nextHopIP, ethrheader, packetSize);
+	}
+
+}
 /*------------------------------------------------------------------------
 * Method: sendTimeExceededICMP
 * Sends a time exceeded icmp
 *-------------------------------------------------------------------------*/
-void sendTimeExceededICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+void sendTimeExceededICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendTimeExceededICMP-- \n");
 	/*
 
 	*/
-	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
+	/*sendOrStash();*/
 }
 
 /*------------------------------------------------------------------------
 * Method: sendType3ICMP
 * Sends a type 3 ICMP
 *-------------------------------------------------------------------------*/
-void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendType3ICMP-- \n");
 	/*
 
 	*/
-	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
+	/*sendOrStash();*/
 }
 
 /*------------------------------------------------------------------------
 * Method: sendEchoReply
 * Sends an echo reply
 *-------------------------------------------------------------------------*/
-void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code){
+void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendEchoReply-- \n");
+	
 	/*
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(ipheader->len);
+	printf("packetsize: %u\n", packetSize);
+	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
 	
-	make sure to convert to network order when you place in packet
-	malloc new ether of correct len
-	mem copy everything in verbatim
-	swithc around fields
-	recompute checksum
-	send
+	memcpy(ethrheader,((sr_ethernet_hdr_t*)ipheader)-1,packetSize);
 	
-	malloc new ip header
-	memcopy old header directly onto new header
-	swap source and destination ips (carefull about endianness - could be tricky around here)
-	--icmp header and data--
-	malloc new icmp header - memset to 0
-	after checksum field, straight up copy everything into newly malloced icmp packet
-	compute checksum over headr starting at type, store in checksum
-	--icmp--
-	*/
-	/*int sr_send_packet(sr,(uint8_t*) ethrheader,len,iface);*/
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
+
+	printf("---MY generateAndSendArpReply ETHR HEADER INFO---\n");
+  	print_hdr_eth((uint8_t *)outgoingEthrheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	sr_arp_hdr_t* outgoingArpheader = (sr_arp_hdr_t*)(outgoingEthrheader+1);
+ 	
+ 	outgoingArpheader->ar_op=htons(arp_op_reply);
+ 	
+ 	memcpy(outgoingArpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
+ 	outgoingArpheader->ar_sip = incomingArpheader->ar_tip;
+ 	memcpy(outgoingArpheader->ar_tha,incomingArpheader->ar_sha,ETHER_ADDR_LEN);
+ 	outgoingArpheader->ar_tip = incomingArpheader->ar_sip;
+ 	
+ 	printf("---MY generateAndSendArpReply ARP HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)outgoingArpheader);
+ 	printf("--------------------------------------------\n");
+ 	*/
+ 	/*dont forget checksum stuff*/
+ 	/*
+ 	sendOrStash(sr,ethrheader,packetSize, interfaceName);
+*/
+	
 }
 
 /*------------------------------------------------------------------------
@@ -389,7 +417,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, 
 * also needed for traceroute to work.
 *-------------------------------------------------------------------------*/
 
-void sendICMP(uint8_t description, sr_ip_hdr_t* ipheader, struct sr_instance* sr){
+void sendICMP(uint8_t description, sr_ip_hdr_t* ipheader, struct sr_instance* sr, char* interfaceName){
 	printf("--function: sendICMP-- \n");
 	uint8_t type;
 	uint8_t code;
@@ -400,29 +428,31 @@ void sendICMP(uint8_t description, sr_ip_hdr_t* ipheader, struct sr_instance* sr
 		printf("creating ECHO_REPLY\n");
 		type=0;
 		code=0;
-		sendEchoReply(sr, ipheader, type, code);
+		sendEchoReply(sr, ipheader, type, code, interfaceName);
 		break;
 	case DESTINATION_UNREACHABLE:
 		printf("creating DESTINATION_UNREACHABLE\n");
 		type=3;
 		code=0;
-		sendType3ICMP(sr, ipheader, type, code);
+		sendType3ICMP(sr, ipheader, type, code, interfaceName);
 		break;
 	case DESTINATION_HOST_UNREACHABLE:
 		printf("creating DESTINATION_HOST_UNREACHABLE\n");
 		type=3;
 		code=1;
+		sendType3ICMP(sr, ipheader, type, code, interfaceName);
 		break;
 	case DESTINATION_PORT_UNREACHABLE:
 		printf("creating DESTINATION_PORT_UNREACHABLE\n");
 		type=3;
 		code=3;
+		sendType3ICMP(sr, ipheader, type, code, interfaceName);
 		break;
 	case TIME_EXCEEDED:
 		printf("creating TIME_EXCEEDED\n");
 		type=11;
 		code=0;
-		sendTimeExceededICMP(sr, ipheader, type, code);
+		sendTimeExceededICMP(sr, ipheader, type, code, interfaceName);
 		break;
 	default:
 		printf("!!Sending unknown ICMP - auth Jacob in sendICMP!!");
@@ -473,12 +503,12 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 * -Otherwise, ignore the packet.
 *-------------------------------------------------------------------------*/
 
-void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
+void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 	printf("--function: ipToMe-- \n");
-	len = len - (sizeof(*ipheader));
+	unsigned int len = ntohl(ipheader->ip_len) - sizeof(*ipheader);
 	printf("len: %i\n", len);
 	
-	if(ipheader->ip_p==ip_protocol_icmp){ /*if icmp*/
+	if(ipheader->ip_p==ip_protocol_icmp){ 
 		sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);
 		/*
 		printf("---MY ICMP HEADER INFO---\n");
@@ -486,11 +516,11 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, unsigned int len){
  		printf("--------------------------\n");
  		*/
 		if(receiveValidEchoRequest(icmpheader, len)){
-			sendICMP(ECHO_REPLY, ipheader, sr);
+			sendICMP(ECHO_REPLY, ipheader, sr, interfaceName);
 		}
 		
 	} else if(receiveTCPorUDP(ipheader)){
-		sendICMP(DESTINATION_PORT_UNREACHABLE, ipheader, sr);
+		sendICMP(DESTINATION_PORT_UNREACHABLE, ipheader, sr, interfaceName);
 	}
 	/*If the packet isn't caught in one of the above conditions, ignore*/
 }
@@ -528,9 +558,6 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 	struct sr_rt* tableEntry = sr->routing_table;
 	uint32_t nextHopIP = 0;
 	uint8_t longestPrefix = 0;
-	
-	
-	
 	
 	while(tableEntry){
 	
@@ -575,36 +602,14 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 * 
 *-------------------------------------------------------------------------*/
 
-void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
+void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 	printf("--function: forwardIP-- \n");
-	/*sanity check, decrement ttl, etc*/
 	
-	/*THIS ALL NEEDS TO BE THOROUGHLY TESTED*/
+	/*decrement ttl, recompute checksum over modified header,*/
 	
-	uint32_t destinationIP = ntohl(ipheader->ip_dst);
-	uint32_t nextHopIP = getNextHopIPFromRouter(sr, destinationIP);
+	/*if ttl reaches zero, sendICMP(EXCEEDED)*/
 	
-	/*entry ip in network byte order*/
-	struct sr_arpentry* entry = sr_arpcache_lookup(&(sr->cache), htonl(nextHopIP));
-	if(entry){
-		printf("HIT! Destination in arp cache\n");
-		/*surely this can be done better*/
-		unsigned char destinationMac[ETHER_ADDR_LEN];
-		memcpy(destinationMac, entry->mac, ETHER_ADDR_LEN);
-		memcpy(((sr_ethernet_hdr_t*)(ipheader-1))->ether_dhost, destinationMac, ETHER_ADDR_LEN);
-		/*test ^^^ */
-		
-		free(entry);
-	} else {
-		printf("MISS! Send arp request!\n");
-		/*
-		send arp request for next hop ip(if one hasnt been sent in last second), 
-		add packet to the queue of packets waiting on this arp request
-		resend arp request every sec for 5 secs
-		*/
-	}
-	/*check arp cache stuff*/
-	/* send it*/
+	/* sendOrStash();*/
 }
 
 /*------------------------------------------------------------------------
@@ -615,21 +620,28 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader){
 *	not to one of my interfaces -> sanity check, forward
 *------------------------------------------------------------------------*/
 void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned int len, char* interfaceName){
-	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
-	
 	printf("--function: handleIP-- \n");
-	len = len - (sizeof(*ethrheader));
-	printf("len: %i\n", len);
+	
+	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
+	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
+	
+	/*
+	
+	SANITY CHECK HERE - USE LEN, ETC
+	if fail, send something unreachable or sthg
+	
+	*/
+	
 	/*
 	printf("---MY IP HEADER INFO---\n");
   	print_hdr_ip((uint8_t*)ipheader);
  	printf("--------------------------\n");
  	*/
-	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
+	
 	if(interface!=NULL){
-		ipToMe(sr, ipheader, len);
+		ipToMe(sr, ipheader, interfaceName);
 	}else{
-		forwardIP(sr, ipheader);
+		forwardIP(sr, ipheader, interfaceName);
 	}
 }
 
@@ -677,7 +689,7 @@ void sr_handlepacket(struct sr_instance* sr,
   switch(determineEthernetFrameType(ethrheader))
   {
   case ARP: 
-  	handleArp(sr, ethrheader, len, interface);
+  	handleArp(sr, ethrheader, interface);
   	break;
   case IP: 
   	handleIP(sr, ethrheader, len, interface);

@@ -18,15 +18,111 @@
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
 	printf("--function: sr_arpcache_sweepreqs-- \n");
-/*
 
-	 sr_arpcache_dump(struct sr_arpcache *cache);
+	struct sr_arpreq* req = sr->cache->requests;
+	while(req){
+		handle_arpreq(req);
+		req= req->next;
+	}
+	    
+    /*
+    struct sr_arpreq {
+    uint32_t ip;
+    time_t sent;                Last time this ARP request was sent. You 
+                                   should update this. If the ARP request was 
+                                   never sent, will be 0. 
+    uint32_t times_sent;        Number of times this request was sent. You 
+                                   should update this. 
+    struct sr_packet *packets;   List of pkts waiting on this req to finish 
+    struct sr_arpreq *next;
+};
 
-	for each request on sr->cache.requests:
-           handle_arpreq(request)
-*/
-    /* Fill this in */
+struct sr_packet {
+    uint8_t *buf;                A raw Ethernet frame, presumably with the dest MAC empty 
+    unsigned int len;            Length of raw Ethernet frame 
+    char *iface;                 The outgoing interface 
+    struct sr_packet *next;
+};
+    
+
+*/    
+
+    
 }
+
+void difftime(){
+	printf("--function: difftime--UNIMPLEMENTED\n");
+	return 1;
+}
+
+void handle_arpreq(struct sr_arpreq* req){
+   printf("--function: handle_arpreq-- \n"); 
+   
+	if(difftime(now, req->sent) > 1.0){
+		if(req->times_sent >=5){
+   
+     /*
+               send icmp host unreachable to source addr of all pkts waiting
+                 on this request
+               arpreq_destroy(req)
+               */
+   
+   		}else{
+   		
+   		  /*
+               send arp request
+               req->sent = now
+               req->times_sent++
+               */
+   		}   
+   }
+}
+
+/*------------------------------------------------------------------------
+* Method: generateArpRequest
+* generates an ARp request
+* 
+*-------------------------------------------------------------------------*/
+
+void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP){
+	printf("--function: generateArpRequest-- \n");
+	
+	struct sr_if* interface = sr_get_interface(sr, interfaceName);
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
+	
+	memset(ethrheader, 0xff, sizeof(sr_ethernet_hdr_t)+ sizeof(sr_arp_hdr_t));
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
+	ethrheader->ether_type = htons(ethertype_arp);
+	
+	printf("---MY generateArpRequest ETHR HEADER INFO---\n");
+  	print_hdr_eth((uint8_t *)ethrheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	sr_arp_hdr_t* arpheader = (sr_arp_hdr_t*)(ethrheader+1);
+ 	
+ 	arpheader->ar_hrd=htons(1);
+ 	arpheader->ar_pro=htons(ethertype_ip);
+ 	arpheader->ar_hln=ETHER_ADDR_LEN;
+ 	arpheader->ar_pln=IP_ADDR_LEN;
+ 	arpheader->ar_op=htons(arp_op_request);
+ 	memcpy(arpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
+ 	arpheader->ar_sip = interface->ip;
+ 	arpheader->ar_tip=nextHopIP; /*NEEDS TO == NEXT HOP IP FROM TABLE*/
+ 	
+ 	printf("---MY generateArpRequest ARP HEADER INFO---\n");
+  	print_hdr_arp((uint8_t *)arpheader);
+ 	printf("--------------------------------------------\n");
+ 	
+ 	
+ 	printf("NOT FULLY IMPLEMENTED\n");
+ 	/*
+ 	Needs to either send packet or return void* packet
+ 	Dont foget to free the packet
+ 	*/
+ 	
+}
+
 
 /* You should not need to touch the rest of this code. */
 
