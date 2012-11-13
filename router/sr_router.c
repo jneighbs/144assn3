@@ -432,7 +432,6 @@ void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
 	/*
 	memcpy(ethrheader,((sr_ethernet_hdr_t*)incomingIpheader)-1,packetSize);
 	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);	
-	
 
 	*/
 	/*sendPackOrStash();*/
@@ -625,14 +624,28 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceNam
 	printf("--function: forwardIP--UNIMPLEMENTED \n");
 	unsigned int len = ntohl(ipheader->ip_len);
 	
-	/*decrement ttl, recompute checksum over modified header,*/
+	ipheader->ip_ttl--;
+	ipheader->ip_sum=0;
+	ipheader->ipsum = cksum(ipheader, len);
 	
-	/*if ttl reaches zero, sendICMP(EXCEEDED)*/
+	if(ipheader->ip_ttl==0){
+		sendICMP(TIME_EXCEEDED, ipheader,sr, interfaceName)
+	}
 	
-	/*change source mac address*/
 	sr_ethernet_hdr_t* ethrheader = ((sr_ethernet_hdr_t*)ipheader)-1;
 	sendPackOrStash(sr,ethrheader,len+sizeof(sr_ethernet_hdr_t),interfaceName);
 }
+
+
+int sanityCheck(sr_ip_hdr_t* ipheader, unsigned int len){
+	
+	uint16_t curCksum = ipheader->ip_sum;
+	ipheader->ip_sum = 0;
+	uint16_t calcCksm = cksum(ipheader, len)
+	
+	return(curCksum == calcCksum && len == ntohs(ipheader->ip_len))
+}
+
 
 /*------------------------------------------------------------------------
 * Method: handleIP
@@ -647,23 +660,14 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	
-	/*
 	
-	SANITY CHECK HERE - USE LEN, ETC
-	if fail, send something unreachable or sthg
+	if(sanityCheck(ipheader, len)){
 	
-	*/
-	
-	/*
-	printf("---MY IP HEADER INFO---\n");
-  	print_hdr_ip((uint8_t*)ipheader);
- 	printf("--------------------------\n");
- 	*/
-	
-	if(interface!=NULL){
-		ipToMe(sr, ipheader, interfaceName);
-	}else{
-		forwardIP(sr, ipheader, interfaceName);
+		if(interface!=NULL){
+			ipToMe(sr, ipheader, interfaceName);
+		}else{
+			forwardIP(sr, ipheader, interfaceName);
+		}
 	}
 }
 
