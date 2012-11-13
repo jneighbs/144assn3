@@ -664,14 +664,14 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
 	struct sr_if* interface = findInterfaceThatMatchesIpDest(sr, ipheader);
 	
 	
-	if(sanityCheck(ipheader, len)){
+	/*if(sanityCheck(ipheader, len)){*/
 	
 		if(interface!=NULL){
 			ipToMe(sr, ipheader, interfaceName);
 		}else{
 			forwardIP(sr, ipheader, interfaceName);
 		}
-	}
+	/*}*/
 }
 
 /*---------------------------------------------------------------------
