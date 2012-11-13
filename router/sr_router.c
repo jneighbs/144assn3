@@ -436,10 +436,11 @@ void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, 
 void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendEchoReply-- \n");
 	
-	
-	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(incomingIpheader->len);
-	printf("packetsize: %u\n", packetSize);
+	struct sr_if* interface = sr_get_interface(sr,interfaceName);
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(incomingIpheader->ip_len);
+	printf("packetsize: %u\n", (unsigned int)packetSize);
 	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
+	
 	
 	memcpy(ethrheader,((sr_ethernet_hdr_t*)incomingIpheader)-1,packetSize);
 	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);	
@@ -458,7 +459,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
   	icmpheader->icmp_sum = 0;
   	
   	icmpheader->icmp_sum = cksum(icmpheader, packetSize-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
-    ipheader->sum = cksum(ipheader, packetSize-sizeof(sr_ethernet_hdr_t));
+    ipheader->ip_sum = cksum(ipheader, packetSize-sizeof(sr_ethernet_hdr_t));
  
  	printf("---MY sendEchoReply ETHR HEADER INFO---\n");
  	print_hdrs(ethrheader, packetSize);
