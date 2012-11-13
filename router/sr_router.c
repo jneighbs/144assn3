@@ -270,6 +270,25 @@ return NULL;
 }
 
 /*------------------------------------------------------------------------
+* Method: turnMaskIntoPrefixLen
+* 
+*-------------------------------------------------------------------------*/
+uint8_t turnMaskIntoPrefixLen(uint32_t mask){
+	printf("--function: turnMaskIntoPrefixLen-- \n");
+	uint8_t count = 0;
+	uint32_t leadingBitTurnedOn = 0x80000000;
+	/*printf("leadingBitTurnedOn (hopefully 2147483648): %u\n", leadingBitTurnedOn);*/
+	while(mask & leadingBitTurnedOn){
+		/*printf("mask & leadingBitTurnedOn == true\n");*/
+		print_addr_ip_int(mask);
+		mask = mask<<1;
+		count++;
+	}
+	printf("mask len: %u\n", count);
+	return count;
+}
+
+/*------------------------------------------------------------------------
 * Method: getNextHopIPFromRouter
 * 
 *-------------------------------------------------------------------------*/
@@ -320,21 +339,18 @@ uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
 }
 
 /*------------------------------------------------------------------------
-* Method: send
+* Method: sendPack
 * compute mac address, add it into packet, and send!
 *------------------------------------------------------------------------*/
-void send(struct sr_instance* sr, struct sr_arpentry* entry, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
-	printf("--function: send-- \n");
+void sendPack(struct sr_instance* sr, struct sr_arpentry* entry, sr_ethernet_hdr_t* ethrheader, size_t packetSize, char* interfaceName){
+	printf("--function: sendPack-- \n");
 
-	/*surely this can be done better*/
-	unsigned char destinationMac[ETHER_ADDR_LEN];
-	memcpy(destinationMac, entry->mac, ETHER_ADDR_LEN);
-	memcpy(ethrheader->ether_dhost, destinationMac, ETHER_ADDR_LEN);
+
+	memcpy(ethrheader->ether_dhost, entry->mac, ETHER_ADDR_LEN);
 		
-	printf("These 3 destination macs should all be the same: \n");
-	print_addr_eth(destinationMac);
+	printf("These 2 destination macs should all be the same: \n");
 	print_addr_eth(entry->mac);
-	print_addr_eth((((sr_ethernet_hdr_t*)ipheader)-1)->ether_dhost);
+	print_addr_eth(ethrheader->ether_dhost);
 		
 	sr_send_packet(sr, (uint8_t*)ethrheader, packetSize, interfaceName);
 }
@@ -361,8 +377,8 @@ void stash(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP, sr_e
 * for the related MAC address and if a hit, sends packet, if a miss, stores 
 * packet in arpreq to be sent later (when a arpreply is received)
 *------------------------------------------------------------------------*/
-int sendOrStash(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, size_t packetSize, char* interfaceName){
-	printf("--function: sendOrStash-- \n");
+void sendPackOrStash(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, size_t packetSize, char* interfaceName){
+	printf("--function: sendPackOrStash-- \n");
 
 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
 	uint32_t destinationIP = ntohl(ipheader->ip_dst);
@@ -372,7 +388,7 @@ int sendOrStash(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, size_t pa
 	struct sr_arpentry* entry = sr_arpcache_lookup(&(sr->cache), htonl(nextHopIP));
 	if(entry){
 		printf("HIT! Destination in arp cache\n");
-		send(sr, entry, ethrheader, packetSize, interfaceName);
+		sendPack(sr, entry, ethrheader, packetSize, interfaceName);
 		free(ethrheader);
 		free(entry);
 		
@@ -391,7 +407,7 @@ void sendTimeExceededICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t
 	/*
 
 	*/
-	/*sendOrStash();*/
+	/*sendPackOrStash();*/
 }
 
 /*------------------------------------------------------------------------
@@ -403,7 +419,7 @@ void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, 
 	/*
 
 	*/
-	/*sendOrStash();*/
+	/*sendPackOrStash();*/
 }
 
 /*------------------------------------------------------------------------
@@ -441,7 +457,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, 
  	*/
  	/*dont forget checksum stuff*/
  	/*
- 	sendOrStash(sr,ethrheader,packetSize, interfaceName);
+ 	sendPackOrStash(sr,ethrheader,packetSize, interfaceName);
 */
 	
 }
@@ -575,24 +591,7 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 }
 
 
-/*------------------------------------------------------------------------
-* Method: turnMaskIntoPrefixLen
-* 
-*-------------------------------------------------------------------------*/
-uint8_t turnMaskIntoPrefixLen(uint32_t mask){
-	printf("--function: turnMaskIntoPrefixLen-- \n");
-	uint8_t count = 0;
-	uint32_t leadingBitTurnedOn = 0x80000000;
-	/*printf("leadingBitTurnedOn (hopefully 2147483648): %u\n", leadingBitTurnedOn);*/
-	while(mask & leadingBitTurnedOn){
-		/*printf("mask & leadingBitTurnedOn == true\n");*/
-		print_addr_ip_int(mask);
-		mask = mask<<1;
-		count++;
-	}
-	printf("mask len: %u\n", count);
-	return count;
-}
+
 
 
 
@@ -608,7 +607,7 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceNam
 	
 	/*if ttl reaches zero, sendICMP(EXCEEDED)*/
 	
-	/* sendOrStash();*/
+	/* sendPackOrStash();*/
 }
 
 /*------------------------------------------------------------------------
