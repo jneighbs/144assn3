@@ -23,43 +23,15 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 
 	struct sr_arpreq* req = sr->cache.requests;
 	while(req){
-		handle_arpreq(req);
+		handle_arpreq(req, sr);
 		req= req->next;
 	}   
 }
 
 
-
-void handle_arpreq(struct sr_arpreq* req, struct sr_instance *sr){
-	printf("--function: handle_arpreq-- \n"); 
-  	time_t now = 1;
-	time(&now);
-	double diff = difftime(now, req->sent);
-	if(diff >= 1.0){
-		if(req->times_sent >=5){
-   			printf("ARP request sent greater than 5 times \n");
-   			struct sr_packet * packet = req->packets; 
-   			while(packet){
-				sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet->buf;
-     			sendICMP(DESTINATION_HOST_UNREACHABLE, (sr_ip_hdr_t*)(ethrheader+1),sr, packet->iface)
-            	packet = packet->next;
-            	/*free packets?*/
-               }
-        	sr_arpreq_destroy(&(sr->cache), req);
-   
-   		}else{
-   			printf("ARP request sent less than 5 times \n");
-   			generateArpRequest(sr, interfaceName, nextHopIP);
-   			req->sent = now;
-       		req->times_sent++;
-              
-   		}   
-   }
-}
-
 /*------------------------------------------------------------------------
 * Method: generateArpRequest
-* generates an ARp request
+* generates and sends an ARp request
 * 
 *-------------------------------------------------------------------------*/
 
@@ -97,6 +69,36 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
  	printf("sent arp request\n");
  	
 }
+
+
+void handle_arpreq(struct sr_arpreq* req, struct sr_instance *sr){
+	printf("--function: handle_arpreq-- \n"); 
+  	time_t now = 1;
+	time(&now);
+	double diff = difftime(now, req->sent);
+	if(diff >= 1.0){
+		if(req->times_sent >=5){
+   			printf("ARP request sent greater than 5 times \n");
+   			struct sr_packet * packet = req->packets; 
+   			while(packet){
+				sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet->buf;
+     			sendICMP(DESTINATION_HOST_UNREACHABLE, (sr_ip_hdr_t*)(ethrheader+1),sr, packet->iface);
+            	packet = packet->next;
+            	/*free packets?*/
+               }
+        	sr_arpreq_destroy(&(sr->cache), req);
+   
+   		}else{
+   			printf("ARP request sent less than 5 times \n");
+   			generateArpRequest(sr, interfaceName, nextHopIP);
+   			req->sent = now;
+       		req->times_sent++;
+              
+   		}   
+   }
+}
+
+
 
 
 /* You should not need to touch the rest of this code. */

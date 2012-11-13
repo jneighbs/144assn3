@@ -372,7 +372,7 @@ void stash(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP, sr_e
 	
 	struct sr_arpreq* req = sr_arpcache_queuereq(&(sr->cache), nextHopIP,(uint8_t*)ethrheader,(unsigned int)packetSize, interfaceName);
     printf("stash<2>\n");
-    handle_arpreq(req);
+    handle_arpreq(req, sr);
     printf("stash<3>\n");
     free(req);
 }
