@@ -109,7 +109,7 @@ struct sr_arpcache {
 
 /*The handle_arpreq() function is used to check whether or not a specific request
 needs to be resent, and resends it if it does*/
-void handle_arpreq(struct sr_arpreq* req);
+void handle_arpreq(struct sr_arpreq* req, struct sr_instance* sr);
 
 /* Checks if an IP->MAC mapping is in the cache. IP is in network byte order. 
    You must free the returned structure if it is not NULL. */
