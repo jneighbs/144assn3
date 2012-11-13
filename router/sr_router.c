@@ -449,7 +449,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
  	ipheader->ip_sum = 0;
  	
  	uint32_t temp = incomingIpheader->ip_src;
-    ipheader->ip_src = incomingIpheader->ip_dest;
+    ipheader->ip_src = incomingIpheader->ip_dst;
     ipheader->ip_dst =	temp;
     
 
