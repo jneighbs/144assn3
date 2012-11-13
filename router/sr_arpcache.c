@@ -10,6 +10,7 @@
 #include "sr_router.h"
 #include "sr_if.h"
 #include "sr_protocol.h"
+#include "sr_utils.h"
 
 /* 
   This function gets called every second. For each request sent out, we keep
@@ -19,45 +20,22 @@
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
 	printf("--function: sr_arpcache_sweepreqs-- \n");
 
-	struct sr_arpreq* req = sr->cache->requests;
+	struct sr_arpreq* req = sr.cache->requests;
 	while(req){
 		handle_arpreq(req);
 		req= req->next;
-	}
-	    
-    /*
-    struct sr_arpreq {
-    uint32_t ip;
-    time_t sent;                Last time this ARP request was sent. You 
-                                   should update this. If the ARP request was 
-                                   never sent, will be 0. 
-    uint32_t times_sent;        Number of times this request was sent. You 
-                                   should update this. 
-    struct sr_packet *packets;   List of pkts waiting on this req to finish 
-    struct sr_arpreq *next;
-};
-
-struct sr_packet {
-    uint8_t *buf;                A raw Ethernet frame, presumably with the dest MAC empty 
-    unsigned int len;            Length of raw Ethernet frame 
-    char *iface;                 The outgoing interface 
-    struct sr_packet *next;
-};
-    
-
-*/    
-
-    
+	}   
 }
 
-void difftime(){
+double difftime(time_t now, time_t then){
 	printf("--function: difftime--UNIMPLEMENTED\n");
-	return 1;
+	return (1.1);
 }
 
 void handle_arpreq(struct sr_arpreq* req){
-   printf("--function: handle_arpreq-- \n"); 
+	printf("--function: handle_arpreq-- \n"); 
    
+	time_t now;
 	if(difftime(now, req->sent) > 1.0){
 		if(req->times_sent >=5){
    
