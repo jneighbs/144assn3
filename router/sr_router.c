@@ -588,9 +588,9 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 * -Otherwise, ignore the packet.
 *-------------------------------------------------------------------------*/
 
-void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
+void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName, unsigned int len){
 	printf("--function: ipToMe-- \n");
-	unsigned int len = ntohl(ipheader->ip_len) - sizeof(sr_ip_hdr_t);
+	len = len - sizeof(sr_ip_hdr_t);
 	printf("len: %i\n", len);
 	
 	if(ipheader->ip_p==ip_protocol_icmp){ 
@@ -667,7 +667,7 @@ void handleIP(struct sr_instance* sr, sr_ethernet_hdr_t* ethrheader, unsigned in
 	/*if(sanityCheck(ipheader, len)){*/
 	
 		if(interface!=NULL){
-			ipToMe(sr, ipheader, interfaceName);
+			ipToMe(sr, ipheader, interfaceName, len);
 		}else{
 			forwardIP(sr, ipheader, interfaceName);
 		}
