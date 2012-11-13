@@ -269,12 +269,61 @@ struct sr_if* findInterfaceThatMatchesIpDest(struct sr_instance* sr, sr_ip_hdr_t
 return NULL;
 }
 
+/*------------------------------------------------------------------------
+* Method: getNextHopIPFromRouter
+* 
+*-------------------------------------------------------------------------*/
+
+uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
+	printf("--function: getNextHopIPFromRouter-- \n");
+	
+	struct sr_rt* tableEntry = sr->routing_table;
+	uint32_t nextHopIP = 0;
+	uint8_t longestPrefix = 0;
+	
+	while(tableEntry){
+	
+		char* charMask = inet_ntoa(tableEntry->mask);
+		printf("charMask: %s\n", charMask);
+		char* charDest = inet_ntoa(tableEntry->dest);
+		printf("charDest: %s\n", charDest);
+		char* charGateway = inet_ntoa(tableEntry->gw);
+		printf("charGateway: %s\n", charGateway);
+	
+	
+		uint32_t mask = htonl(tableEntry->mask.s_addr);
+		uint32_t dest = htonl(tableEntry->dest.s_addr);
+		uint32_t gateway = htonl(tableEntry->gw.s_addr);
+	
+		print_addr_ip_int(mask);
+		print_addr_ip_int(dest);
+		print_addr_ip_int(gateway);
+	
+		if((destinationIP & mask) == dest){
+			printf("destinationIP & mask: match \n");
+			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
+			printf("curPrefixLen: %u\nlongestPrefix: %u\n", curPrefixLen,longestPrefix);
+			if(longestPrefix < curPrefixLen){
+				longestPrefix = curPrefixLen;
+			 	nextHopIP = gateway;
+			 }
+			 printf("newLongestPrefix: %u\n",longestPrefix);
+		}
+		
+		tableEntry = tableEntry->next;
+	}
+	printf("destinationIP: \n");
+	print_addr_ip_int(destinationIP);
+	printf("nextHopIP: \n");
+	print_addr_ip_int(nextHopIP);
+	return nextHopIP;
+}
 
 /*------------------------------------------------------------------------
 * Method: send
 * compute mac address, add it into packet, and send!
 *------------------------------------------------------------------------*/
-void send(struct sr_instance* sr, sr_arpentry* entry, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
+void send(struct sr_instance* sr, struct sr_arpentry* entry, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
 	printf("--function: send-- \n");
 
 	/*surely this can be done better*/
@@ -546,56 +595,6 @@ uint8_t turnMaskIntoPrefixLen(uint32_t mask){
 }
 
 
-
-/*------------------------------------------------------------------------
-* Method: getNextHopIPFromRouter
-* 
-*-------------------------------------------------------------------------*/
-
-uint32_t getNextHopIPFromRouter(struct sr_instance* sr, uint32_t destinationIP){
-	printf("--function: getNextHopIPFromRouter-- \n");
-	
-	struct sr_rt* tableEntry = sr->routing_table;
-	uint32_t nextHopIP = 0;
-	uint8_t longestPrefix = 0;
-	
-	while(tableEntry){
-	
-		char* charMask = inet_ntoa(tableEntry->mask);
-		printf("charMask: %s\n", charMask);
-		char* charDest = inet_ntoa(tableEntry->dest);
-		printf("charDest: %s\n", charDest);
-		char* charGateway = inet_ntoa(tableEntry->gw);
-		printf("charGateway: %s\n", charGateway);
-	
-	
-		uint32_t mask = htonl(tableEntry->mask.s_addr);
-		uint32_t dest = htonl(tableEntry->dest.s_addr);
-		uint32_t gateway = htonl(tableEntry->gw.s_addr);
-	
-		print_addr_ip_int(mask);
-		print_addr_ip_int(dest);
-		print_addr_ip_int(gateway);
-	
-		if((destinationIP & mask) == dest){
-			printf("destinationIP & mask: match \n");
-			uint8_t curPrefixLen = turnMaskIntoPrefixLen(mask);
-			printf("curPrefixLen: %u\nlongestPrefix: %u\n", curPrefixLen,longestPrefix);
-			if(longestPrefix < curPrefixLen){
-				longestPrefix = curPrefixLen;
-			 	nextHopIP = gateway;
-			 }
-			 printf("newLongestPrefix: %u\n",longestPrefix);
-		}
-		
-		tableEntry = tableEntry->next;
-	}
-	printf("destinationIP: \n");
-	print_addr_ip_int(destinationIP);
-	printf("nextHopIP: \n");
-	print_addr_ip_int(nextHopIP);
-	return nextHopIP;
-}
 
 /*------------------------------------------------------------------------
 * Method: forwardIP
