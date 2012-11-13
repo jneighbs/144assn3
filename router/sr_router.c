@@ -685,9 +685,9 @@ void sr_handlepacket(struct sr_instance* sr,
 	time(&now);
 	
 	double diff = difftime( then, now);
-	printf("then: %d\n", then);
-	printf("now: %d\n", now);
-	printf("diff: %d\n", diff);
+	printf("then: %f\n", then);
+	printf("now: %f\n", now);
+	printf("diff: %f\n", diff);
   
   printf("--Function: sr_handlepacket-- \n");
   /*printf("*** -> Received packet of length %d \n",len);*/
