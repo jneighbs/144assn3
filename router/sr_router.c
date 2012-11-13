@@ -364,7 +364,7 @@ void sendPack(struct sr_instance* sr, struct sr_arpentry* entry, sr_ethernet_hdr
 *------------------------------------------------------------------------*/
 void stash(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
 	printf("--function: stash-- UNIMPLEMENTED\n");
-	void print_hdrs((uint8_t*)ethrheader, (uint32_t)packetSize)
+	print_hdrs((uint8_t*)ethrheader, (uint32_t)packetSize)
 	
 	printf("stash<1>\n");
 	
