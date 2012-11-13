@@ -626,10 +626,10 @@ void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceNam
 	
 	ipheader->ip_ttl--;
 	ipheader->ip_sum=0;
-	ipheader->ipsum = cksum(ipheader, len);
+	ipheader->ip_sum = cksum(ipheader, len);
 	
 	if(ipheader->ip_ttl==0){
-		sendICMP(TIME_EXCEEDED, ipheader,sr, interfaceName)
+		sendICMP(TIME_EXCEEDED, ipheader,sr, interfaceName);
 	}
 	
 	sr_ethernet_hdr_t* ethrheader = ((sr_ethernet_hdr_t*)ipheader)-1;
@@ -641,9 +641,9 @@ int sanityCheck(sr_ip_hdr_t* ipheader, unsigned int len){
 	
 	uint16_t curCksum = ipheader->ip_sum;
 	ipheader->ip_sum = 0;
-	uint16_t calcCksm = cksum(ipheader, len)
+	uint16_t calcCksm = cksum(ipheader, len);
 	
-	return(curCksum == calcCksum && len == ntohs(ipheader->ip_len))
+	return(curCksum == calcCksum && len == ntohs(ipheader->ip_len));
 }
 
 
