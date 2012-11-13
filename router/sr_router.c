@@ -602,12 +602,14 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 
 void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 	printf("--function: forwardIP-- \n");
+	unsigned int len = ntohl(ipheader->ip_len);
 	
 	/*decrement ttl, recompute checksum over modified header,*/
 	
 	/*if ttl reaches zero, sendICMP(EXCEEDED)*/
 	
-	/* sendPackOrStash();*/
+	sr_ethernet_hdr_t* ethrheader = ((sr_ethernet_hdr_t*)ipheader)-1;
+	sendPackOrStash(sr,ethrheader,len+sizeof(sr_ethernet_hdr_t),interfaceName);
 }
 
 /*------------------------------------------------------------------------
