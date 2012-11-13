@@ -421,9 +421,18 @@ void sendTimeExceededICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t
 * Method: sendType3ICMP
 * Sends a type 3 ICMP
 *-------------------------------------------------------------------------*/
-void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code, char* interfaceName){
+void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendType3ICMP-- \n");
+	
+	struct sr_if* interface = sr_get_interface(sr,interfaceName);
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
+	
+	
 	/*
+	memcpy(ethrheader,((sr_ethernet_hdr_t*)incomingIpheader)-1,packetSize);
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);	
+	
 
 	*/
 	/*sendPackOrStash();*/
