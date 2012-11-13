@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 
 
@@ -24,6 +25,7 @@
 #include "sr_protocol.h"
 #include "sr_arpcache.h"
 #include "sr_utils.h"
+
 
 #define IP_ADDR_LEN 4
 /*ethernet type*/
@@ -364,7 +366,7 @@ void sendPack(struct sr_instance* sr, struct sr_arpentry* entry, sr_ethernet_hdr
 *------------------------------------------------------------------------*/
 void stash(struct sr_instance* sr, char* interfaceName, uint32_t nextHopIP, sr_ethernet_hdr_t* ethrheader, size_t packetSize){
 	printf("--function: stash-- UNIMPLEMENTED\n");
-	print_hdrs((uint8_t*)ethrheader, (uint32_t)packetSize);
+	print_hdrs((uint8_t*)ethrheader, (uint32_t)packetSize)
 	
 	printf("stash<1>\n");
 	
@@ -606,13 +608,14 @@ void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 *-------------------------------------------------------------------------*/
 
 void forwardIP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
-	printf("--function: forwardIP-- \n");
+	printf("--function: forwardIP--UNIMPLEMENTED \n");
 	unsigned int len = ntohl(ipheader->ip_len);
 	
 	/*decrement ttl, recompute checksum over modified header,*/
 	
 	/*if ttl reaches zero, sendICMP(EXCEEDED)*/
 	
+	/*change source mac address*/
 	sr_ethernet_hdr_t* ethrheader = ((sr_ethernet_hdr_t*)ipheader)-1;
 	sendPackOrStash(sr,ethrheader,len+sizeof(sr_ethernet_hdr_t),interfaceName);
 }
@@ -675,6 +678,16 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(sr);
   assert(packet);
   assert(interface);
+  
+  	time_t then = 1;
+	time(&then);
+  	time_t now = 1;
+	time(&now);
+	
+	double diff = difftime( then, now);
+	printf("then: %d\n", then);
+	printf("now: %d\n", now);
+	printf("diff: %d\n", diff);
   
   printf("--Function: sr_handlepacket-- \n");
   /*printf("*** -> Received packet of length %d \n",len);*/

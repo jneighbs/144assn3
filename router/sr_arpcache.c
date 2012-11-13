@@ -28,15 +28,13 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	}   
 }
 
-double difftime(time_t now, time_t then){
-	printf("--function: difftime--UNIMPLEMENTED\n");
-	return (1.1);
-}
+
 
 void handle_arpreq(struct sr_arpreq* req){
 	printf("--function: handle_arpreq-- \n"); 
    
-	time_t now;
+	time_t now = 1;
+	time(&now);
 	if(difftime(now, req->sent) > 1.0){
 		if(req->times_sent >=5){
    
