@@ -65,7 +65,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
   	print_hdr_arp((uint8_t *)arpheader);
  	printf("--------------------------------------------\n");
  	
- 	int sr_send_packet(sr,(uint8_t*) ethrheader,(unsigned int)packetSize,interfaceName);
+ 	int sr_send_packet(sr,ethrheader,packetSize,interfaceName);
  	printf("sent arp request\n");
  	
 }
@@ -90,7 +90,8 @@ void handle_arpreq(struct sr_arpreq* req, struct sr_instance *sr){
    
    		}else{
    			printf("ARP request sent less than 5 times \n");
-   			generateArpRequest(sr, interfaceName, nextHopIP);
+   			
+   			generateArpRequest(sr, req->packets->iface, req->ip);
    			req->sent = now;
        		req->times_sent++;
               
