@@ -590,7 +590,7 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 
 void ipToMe(struct sr_instance* sr, sr_ip_hdr_t* ipheader, char* interfaceName){
 	printf("--function: ipToMe-- \n");
-	unsigned int len = ntohl(ipheader->ip_len) - sizeof(*ipheader);
+	unsigned int len = ntohl(ipheader->ip_len) - sizeof(sr_ip_hdr_t);
 	printf("len: %i\n", len);
 	
 	if(ipheader->ip_p==ip_protocol_icmp){ 
