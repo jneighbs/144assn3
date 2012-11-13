@@ -65,7 +65,7 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
   	print_hdr_arp((uint8_t *)arpheader);
  	printf("--------------------------------------------\n");
  	
- 	int sr_send_packet(sr,ethrheader,packetSize,interfaceName);
+ 	sr_send_packet(sr,(uint8_t*)ethrheader,(unsigned int)packetSize,interfaceName);
  	printf("sent arp request\n");
  	
 }
