@@ -56,6 +56,9 @@ struct sr_instance
     FILE* logfile;
 };
 
+/*sends icmp based on the given description*/
+void sendICMP(uint8_t description, sr_ip_hdr_t* ipheader, struct sr_instance* sr, char* interfaceName);
+
 /* -- sr_main.c -- */
 int sr_verify_routing_table(struct sr_instance* sr);
 

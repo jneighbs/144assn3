@@ -433,39 +433,39 @@ void sendType3ICMP(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, 
 * Method: sendEchoReply
 * Sends an echo reply
 *-------------------------------------------------------------------------*/
-void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* ipheader, uint8_t type, uint8_t code, char* interfaceName){
+void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_t type, uint8_t code, char* interfaceName){
 	printf("--function: sendEchoReply-- \n");
 	
-	/*
-	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(ipheader->len);
+	
+	size_t packetSize = sizeof(sr_ethernet_hdr_t) + ntohl(incomingIpheader->len);
 	printf("packetsize: %u\n", packetSize);
 	sr_ethernet_hdr_t* ethrheader = malloc(packetSize);
 	
-	memcpy(ethrheader,((sr_ethernet_hdr_t*)ipheader)-1,packetSize);
-	
-	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);
+	memcpy(ethrheader,((sr_ethernet_hdr_t*)incomingIpheader)-1,packetSize);
+	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);	
+ 	
+ 	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
+ 	ipheader->sum = 0;
+ 	
+ 	uint32_t temp = incomingIpheader->ip_src;
+    ipheader->ip_src = incomingIpheader->dest;
+    ipheader->ip_dst =	temp;
+    
 
-	printf("---MY generateAndSendArpReply ETHR HEADER INFO---\n");
-  	print_hdr_eth((uint8_t *)outgoingEthrheader);
+ 	sr_icmp_hdr_t* icmpheader = (sr_icmp_hdr_t*)(ipheader+1);
+ 	icmpheader->icmp_type = 0;
+ 	icmpheader->icmp_code = 0;
+  	icmpheader->icmp_sum = 0;
+  	
+  	icmpheader->icmp_sum = cksum(icmpheader, packetSize-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
+    ipheader->sum = cksum(ipheader, packetSize-sizeof(sr_ethernet_hdr_t));
+ 
+ 	printf("---MY sendEchoReply ETHR HEADER INFO---\n");
+ 	print_hdrs(ethrheader, packetSize);
  	printf("--------------------------------------------\n");
- 	
- 	sr_arp_hdr_t* outgoingArpheader = (sr_arp_hdr_t*)(outgoingEthrheader+1);
- 	
- 	outgoingArpheader->ar_op=htons(arp_op_reply);
- 	
- 	memcpy(outgoingArpheader->ar_sha,interface->addr,ETHER_ADDR_LEN);
- 	outgoingArpheader->ar_sip = incomingArpheader->ar_tip;
- 	memcpy(outgoingArpheader->ar_tha,incomingArpheader->ar_sha,ETHER_ADDR_LEN);
- 	outgoingArpheader->ar_tip = incomingArpheader->ar_sip;
- 	
- 	printf("---MY generateAndSendArpReply ARP HEADER INFO---\n");
-  	print_hdr_arp((uint8_t *)outgoingArpheader);
- 	printf("--------------------------------------------\n");
- 	*/
- 	/*dont forget checksum stuff*/
- 	/*
+ 
  	sendPackOrStash(sr,ethrheader,packetSize, interfaceName);
-*/
+
 	
 }
 
@@ -679,15 +679,6 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(packet);
   assert(interface);
   
-  	time_t then = 1;
-	time(&then);
-  	time_t now = 1;
-	time(&now);
-	
-	double diff = difftime( then, now);
-	printf("then: %f\n", then);
-	printf("now: %f\n", now);
-	printf("diff: %f\n", diff);
   
   printf("--Function: sr_handlepacket-- \n");
   /*printf("*** -> Received packet of length %d \n",len);*/

@@ -30,27 +30,29 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 
 
 
-void handle_arpreq(struct sr_arpreq* req){
+void handle_arpreq(struct sr_arpreq* req, struct sr_instance *sr){
 	printf("--function: handle_arpreq-- \n"); 
-   
-	time_t now = 1;
+  	time_t now = 1;
 	time(&now);
-	if(difftime(now, req->sent) > 1.0){
+	double diff = difftime(now, req->sent);
+	if(diff >= 1.0){
 		if(req->times_sent >=5){
-   
-     /*
-               send icmp host unreachable to source addr of all pkts waiting
-                 on this request
-               arpreq_destroy(req)
-               */
+   			printf("ARP request sent greater than 5 times \n");
+   			struct sr_packet * packet = req->packets; 
+   			while(packet){
+				sr_ethernet_hdr_t* ethrheader = (sr_ethernet_hdr_t*)packet->buf;
+     			sendICMP(DESTINATION_HOST_UNREACHABLE, (sr_ip_hdr_t*)(ethrheader+1),sr, packet->iface)
+            	packet = packet->next;
+            	/*free packets?*/
+               }
+        	sr_arpreq_destroy(&(sr->cache), req);
    
    		}else{
-   		
-   		  /*
-               send arp request
-               req->sent = now
-               req->times_sent++
-               */
+   			printf("ARP request sent less than 5 times \n");
+   			generateArpRequest(sr, interfaceName, nextHopIP);
+   			req->sent = now;
+       		req->times_sent++;
+              
    		}   
    }
 }
@@ -91,12 +93,8 @@ void generateArpRequest(struct sr_instance* sr, char* interfaceName, uint32_t ne
   	print_hdr_arp((uint8_t *)arpheader);
  	printf("--------------------------------------------\n");
  	
- 	
- 	printf("NOT FULLY IMPLEMENTED\n");
- 	/*
- 	Needs to either send packet or return void* packet
- 	Dont foget to free the packet
- 	*/
+ 	int sr_send_packet(sr,(uint8_t*) ethrheader,(unsigned int)packetSize,interfaceName);
+ 	printf("sent arp request\n");
  	
 }
 
