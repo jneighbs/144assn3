@@ -164,17 +164,17 @@ struct sr_arpreq *sr_arpcache_queuereq(struct sr_arpcache *cache,
     
     /* Add the packet to the list of packets for this request */
     if (packet && packet_len && iface) {
-    	printf("queuerec<1>\n");
+    	
         struct sr_packet *new_pkt = (struct sr_packet *)malloc(sizeof(struct sr_packet));
-         printf("queuerec<2>\n");
+         printf("queuerec<1>\n");
         new_pkt->buf = (uint8_t *)malloc(packet_len);
+        printf("queuerec<2>\n");
         memcpy(new_pkt->buf, packet, packet_len);
         printf("queuerec<3>\n");
         new_pkt->len = packet_len;
 		new_pkt->iface = (char *)malloc(sr_IFACE_NAMELEN);
         strncpy(new_pkt->iface, iface, sr_IFACE_NAMELEN);
         new_pkt->next = req->packets;
-        printf("queuerec<4>\n");
         req->packets = new_pkt;
     }
     
