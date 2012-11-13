@@ -446,10 +446,10 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
 	memcpy(ethrheader->ether_shost,interface->addr,ETHER_ADDR_LEN);	
  	
  	sr_ip_hdr_t* ipheader = (sr_ip_hdr_t*)(ethrheader+1);
- 	ipheader->sum = 0;
+ 	ipheader->ip_sum = 0;
  	
  	uint32_t temp = incomingIpheader->ip_src;
-    ipheader->ip_src = incomingIpheader->dest;
+    ipheader->ip_src = incomingIpheader->ip_dest;
     ipheader->ip_dst =	temp;
     
 
@@ -462,7 +462,7 @@ void sendEchoReply(struct sr_instance* sr, sr_ip_hdr_t* incomingIpheader, uint8_
     ipheader->ip_sum = cksum(ipheader, packetSize-sizeof(sr_ethernet_hdr_t));
  
  	printf("---MY sendEchoReply ETHR HEADER INFO---\n");
- 	print_hdrs(ethrheader, packetSize);
+ 	print_hdrs((uint8_t*)ethrheader, packetSize);
  	printf("--------------------------------------------\n");
  
  	sendPackOrStash(sr,ethrheader,packetSize, interfaceName);
