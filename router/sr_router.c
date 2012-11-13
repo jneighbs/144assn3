@@ -555,9 +555,13 @@ int receiveValidEchoRequest(sr_icmp_hdr_t* icmpheader, unsigned int len){
 	printf("icmpheader->icmp_type: %u\n", icmpheader->icmp_type);
 	printf("icmpheader->icmp_code: %u\n", icmpheader->icmp_code);
 	
+	printf("--function:1-- \n");
 	uint16_t givenChecksum = icmpheader->icmp_sum;
+	printf("--function: 2-- \n");
 	icmpheader->icmp_sum = 0;
+	printf("--function: 3-- \n");
 	uint16_t calculatedChecksum= cksum(icmpheader, len);
+	printf("--function: 4-- \n");
 	icmpheader->icmp_sum = givenChecksum;
 	
 	printf("givenChecksum: %d\n", givenChecksum);
