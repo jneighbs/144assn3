@@ -12,6 +12,7 @@
 #include "sr_protocol.h"
 #include "sr_utils.h"
 
+#define IP_ADDR_LEN 4
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
@@ -20,7 +21,7 @@
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
 	printf("--function: sr_arpcache_sweepreqs-- \n");
 
-	struct sr_arpreq* req = sr.cache->requests;
+	struct sr_arpreq* req = sr->cache.requests;
 	while(req){
 		handle_arpreq(req);
 		req= req->next;
